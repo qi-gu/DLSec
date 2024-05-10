@@ -1,0 +1,10 @@
+CACC,0.1486
+ACC-0.005,0.1112
+NoisyACC-0.005,0.0488
+BlurredACC-0.005,0.0683
+CompressedACC-0.005,0.0566
+trigger_std,0.1277
+trigger_size,0.1106
+PoisonSR,0.1165
+After_Datapoison_Defense_ACC,0.1269
+afterPoisonACC,0.0848
