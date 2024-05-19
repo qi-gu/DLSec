@@ -85,9 +85,9 @@
         <h1 class="section-title">上传模型</h1>
         <div class="setting-container">
             <div class="upload-box">
-                <form action="/upload/" method="post" enctype="multipart/form-data">
+                <form id="upload-form" enctype="multipart/form-data">
                     {% csrf_token %}
-                    <input type="file" name="model" id="model" accept=".h5,.hdf5,.hdf">
+                    <input type="file" name="model" id="model" accept=".h5,.hdf5,.hdf,.pth,.pt">
                     <button type="submit">上传</button>
                 </form>
             </div>
@@ -143,6 +143,7 @@
                                 </select>
                             </li>
                             <li>
+                                
                                 <button type="button" id="setting-button">高级设置</button>
                                 <button type="submit">确认参数</button>
                             </li>
@@ -297,5 +298,33 @@
     <!-- <footer>
         <p>&copy; 2020 All rights reserved</p>
     </footer> -->
+    <script>
+        document.getElementById('upload-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+        
+            var formData = new FormData();
+            var fileField = document.querySelector("#model");
+        
+            formData.append('model', fileField.files[0]);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+        
+            fetch('/upload/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // 处理返回的数据
+                console.log(data);
+            })
+            .catch(error => {
+                // 处理错误
+                console.error(error);
+            });
+        
+        }, false);
+        </script>
+
 
 </html>
+
