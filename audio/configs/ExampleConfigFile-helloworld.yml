@@ -1,0 +1,41 @@
+# 对抗攻击目标，即希望让被评测的模型将语音文件（语音数据）识别成的文本，大小写不敏感
+# 例如 HELLO WORLD
+# 例如 MAY THESE HORSES BEAR YOU TO BETTER FORTUNE THAN THEIR FORMER MASTERS
+# 例如 TALK IS CHEAP SHOW ME THE CODE
+goal: HELLO WORLD
+# 评测方法，可以是5种内置方法的子集，逗号 (,) 分隔
+# fgsm, pgd, genetic, cw, icw
+# 也可以是用户自己实现的评测方法（实现方法详见文档相应章节）
+# 内置评测方法大小写不敏感
+# 用户自己实现的评测方法则必须与类名严格一致
+# 如果是空值，则使用预设评测方法组合
+recipes: null
+# 被评测模型权重文件路径
+# 可以是内置的
+# librispeech_pretrained_v3，
+# an4_pretrained_v3，
+# ted_pretrained_v3，
+# 也可自行指定
+# 目前只支持 DeepSpeech 结构的模型
+# 而且模型文件必须以字典的形式将
+# "hyper_parameters"（字典，包含"labels", "precision"), "state_dict"进行存储
+model: librispeech_pretrained_v3
+# 评测用的音频文件所在文件夹路径
+# 可以是内置的音频数据
+# 或者 http://218.245.5.12/audio/data/ 上有的音频文件
+# 也可自行指定路径
+input_dir: librispeech_ft_clean.tar.gz
+# 输出音频文件夹路径
+# 如果为空，则保存在输入文件夹名称添加-AdvGen的文件夹内
+output_dir: null
+# 单个样本的对抗攻击尝试次数上限
+# 若为空值，则评测方法使用内置默认值
+query_budget: 160
+# 使用的GPU设备号
+# 若为空值，则使用默认设备
+# 若值为-1， 则强制使用CPU
+# 若无GPU设备，则此值无效
+device_id: 6
+# 布尔值类型。是否输出评测的过程信息
+verbose: false
+early_stop: false
