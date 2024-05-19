@@ -9,6 +9,9 @@ import sys
 sys.path.append('../')
 from EvaluationPlatformNEW import ModelEvaluation
 from EvaluationConfig import evaluation_params
+
+file_url = None
+
 # Create your views here.
 def test(request):
     return HttpResponse("Hello, world.")
@@ -20,6 +23,7 @@ def cv(request):
     return render(request, "cv.html")
 
 def upload(request):
+    global file_url
     if request.method == 'POST':
         uploaded_file = request.FILES['model']
         evaluation_params['model'] = uploaded_file
@@ -27,8 +31,6 @@ def upload(request):
         fs = FileSystemStorage()
         name=fs.save(uploaded_file.name, uploaded_file)
         file_url=fs.url(name)
-        print(torch.load("."+file_url))
-        
         return JsonResponse({'result':"success"})
     
 def setting (request):
@@ -40,13 +42,18 @@ def setting (request):
     获取表单中的数据
     '''
     dataset = request.POST.get('dataset')
+    model_type = request.POST.get('model')
     adver = request.POST.get('adver')
     back = request.POST.get('back')
     poison = request.POST.get('poison')
     args = request.POST.get('args')
     backdoor_method = request.POST.get('backdoor_method')
     print(dataset,adver,back,poison,args,backdoor_method)
-    print(type(evaluation_params['model']))
+    global file_url
+    model_type = (dataset+"_"+model_type).lower()
+    model = torch.hub.load("chenyaofo/pytorch-cifar-models", "cifar10_resnet56", pretrained=True)
+    model.load_state_dict(torch.load("."+file_url))
+    evaluation_params['model'] =model
     # 对evaluation_params进行对于修改，一些比较基础的参数无需修改
     Process(target=ModelEvaluation,args=[evaluation_params]).start()
     return render(request,"cv.html",status)
