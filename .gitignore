@@ -5,3 +5,4 @@ audio/data/
 __pycache__
 *.pyc
 *.rdb
+audio/Datasets/

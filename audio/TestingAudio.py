@@ -59,6 +59,7 @@ _DEFAULT_ROBUST_THR = 0.6
 from AudioConfig import config
 
 def audio_test(config):
+    res = {}
     config_bak = {k: v if v is not None else "Default" for k, v in config.items()}
     # get attack recipes
     recipes = config["recipes"].split(",")
@@ -69,13 +70,6 @@ def audio_test(config):
         config_bak["num_examples"] = _AUDIO_FILE_SIZES["builtin"] * len(recipes)
     else:
         config_bak["num_examples"] = "Custom"
-
-    if config_bak.get("verbose", False):
-        summary_rows = [[k, v] for k, v in config_bak.items()]
-        log_summary_rows(summary_rows, "Testing Args")
-        print("\n")
-    else:
-        log_summary_rows([], "AI-Testing Audio Module")
 
     goal = config["goal"].upper()
 
@@ -88,6 +82,8 @@ def audio_test(config):
         model_path = download_if_needed(posixpath.join(AITESTING_DOMAIN, "ckpts", model + ".pth.tar"))
         model_path = Path(model_path).resolve()
     else:
+        # 展示仅支持自带的模型
+        return {'error': '暂不支持自定义模型'}
         model_path = Path(model).resolve()
         if not model_path.exists():
             raise FileNotFoundError(f"Model file `{str(model_path)}` not found")
@@ -204,9 +200,9 @@ def audio_test(config):
 
     success_rate = np.mean(testing_results["success"]).item()
     if success_rate >= config_bak.get("robust_threshold", _DEFAULT_ROBUST_THR):
-        conclusion = f"Assessed by TestingAudio, " f"the model \042{config_bak['model']}\042 is NOT robust"
+        conclusion = f"The model \042{config_bak['model']}\042 is NOT robust"
     else:
-        conclusion = f"Assessed by TestingAudio, " f"the model \042{config_bak['model']}\042 is robust"
+        conclusion = f"The model \042{config_bak['model']}\042 is robust"
 
     summary_rows = [
         [
@@ -219,17 +215,23 @@ def audio_test(config):
             f"""{len(testing_results["success"]) - sum(testing_results["success"])}""",
         ],
         ["Adversarial Attack Success Rate", f"{100 * success_rate:.2f}%"],
-        ["", ""],
-        [conclusion, ""],
     ]
+    # 将summary_rows嵌入到res中，作为一个字典，summary_rows[i][0]作为key，summary_rows[i][1]作为value
+    for i in range(len(summary_rows)):
+        if summary_rows[i][0] != "":
+            res[summary_rows[i][0]] = summary_rows[i][1]
+
+    summary_rows.append([conclusion, ""])
     log_summary_rows(summary_rows, "Testing Results")
+
+    return res
 
 
 def log_summary_rows(rows, title, align_center=False):
     width, fillchar = 90, "#"
     title = title.center(len(title) + 10, " ")
     title = title.center(width, fillchar)
-    msg = "\n" + fillchar * width + "\n" + title + "\n" + fillchar * width + "\n\n"
+    msg = "\n" + title + "\n\n"
     if len(rows) == 0:
         print(msg)
         return
