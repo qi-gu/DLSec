@@ -22,4 +22,5 @@ urlpatterns = [
     path('cv/', views.cv),
     path('upload/', views.upload),
     path('audio_judge/', views.audio_judge),
+    path('setting/',views.setting)
 ]

@@ -209,6 +209,24 @@ def process_result(tag="DefaultTag", adversarial_rst=None, backdoor_rst=None, da
 
     return
 
+def start_evaluation(input_model,evaluation_params ):
+    if input_model=="resnet50":
+            model = models.resnet50(pretrained=True)
+            model.load_state_dict(torch.load('./checkpoint/resnet50.pth', map_location=device))
+    elif input_model=="shufflenetv2_x0_5":
+        model = torch.hub.load("chenyaofo/pytorch-cifar-models", "cifar10_shufflenetv2_x0_5", pretrained=True)
+        model.load_state_dict(torch.load('./checkpoint/shufflenetv2_x0_5.pth', map_location=device))
+    elif input_model=="resnet20":            
+        model = torch.hub.load("chenyaofo/pytorch-cifar-models", "cifar10_resnet20", pretrained=True)
+        model.load_state_dict(torch.load('./checkpoint/resnet20.pth', map_location=device))
+    elif input_model=="resnet56":
+        model = torch.hub.load("chenyaofo/pytorch-cifar-models", "cifar10_resnet56", pretrained=True)
+        model.load_state_dict(torch.load('./checkpoint/resnet56.pth', map_location=device))
+    elif input_model=="vgg16_bn":
+        model = torch.hub.load("chenyaofo/pytorch-cifar-models", "cifar10_vgg16_bn", pretrained=True)
+        model.load_state_dict(torch.load('./checkpoint/vgg16_bn.pth', map_location=device))
+    model.eval()
+    ModelEvaluation(evaluation_params=evaluation_params)
 
 if __name__ == '__main__':
     ModelEvaluation(evaluation_params=evaluation_params)
