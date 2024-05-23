@@ -1,0 +1,8 @@
+dataset: sst-2
+data_dir: ../data/clean/sst-2
+model: bert-base-uncased
+model_dir: ./models/lws/bert-base-uncased_sst-2.pkl
+batchsize: 32
+target_label: 1
+custom_bar: -26
+device: 0

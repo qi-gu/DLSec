@@ -1,0 +1,7 @@
+data: sst-2
+model_path: ./models/hiddenkiller/poison_bert_sst2.pkl
+clean_data_path: ../data/clean/sst-2/test.tsv
+poison_data_path: ../data/poison/sst-2/test.tsv
+robust_poison_data_path: ../data/poison/sst-2/robust_test.tsv
+target_label: 1
+record_file: ./record.log
