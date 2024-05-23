@@ -87,18 +87,18 @@ def sample_gumbel(shape, device,eps=1e-20,):
     return -torch.log(-torch.log(U + eps) + eps)
 
 
-def gumbel_softmax_sample(logits, temperature):
-    y = logits + sample_gumbel(logits.size())
+def gumbel_softmax_sample(logits,device,temperature):
+    y = logits + sample_gumbel(logits.size(),device)
     return F.softmax(y / temperature, dim=-1)
 
 
-def gumbel_softmax(logits, temperature,MAX_CANDIDATES, hard=False):
+def gumbel_softmax(logits,device,temperature,MAX_CANDIDATES, hard=False):
     """
     ST-gumple-softmax
     input: [*, n_class]
     return: flatten --> [*, n_class] an one-hot vector
     """
-    y = gumbel_softmax_sample(logits, temperature)
+    y = gumbel_softmax_sample(logits, device,temperature)
 
     if (not hard) or (logits.nelement() == 0):
         return y.view(-1, 1 * MAX_CANDIDATES)
@@ -238,7 +238,8 @@ class self_learning_poisoner(nn.Module):
     def set_temp(self, temp):
         self.N_TEMP = temp
 
-    def get_poisoned_input(self, sentence, candidates, TOKENS,tokenizer,gumbelHard=False, sentence_ids=[], candidate_ids=[]):
+    def get_poisoned_input(self, sentence, candidates, device,TOKENS,tokenizer,MAX_CANDIDATES,MAX_LENGTH,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
+               low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL,gumbelHard=False, sentence_ids=[], candidate_ids=[]):
         length = sentence.size(0) # Total length of poisonable inputs
         repeated = sentence.unsqueeze(2).repeat(1, 1, self.N_CANDIDATES, 1)
         difference = torch.subtract(candidates, repeated)  # of size [length, N_LENGTH, N_CANDIDATES, N_EMBSIZE]
@@ -246,8 +247,9 @@ class self_learning_poisoner(nn.Module):
             [1, self.N_LENGTH, self.N_EMBSIZE, 1]).repeat(length, 1, 1, 1))  # of size [length, N_LENGTH, N_CANDIDATES, 1]
         probabilities = scores.squeeze(3)  # of size [length, N_LENGTH, N_CANDIDATES]
         probabilities += self.relevance_bias.unsqueeze(0).repeat(length, 1, 1)
-        probabilities_sm = gumbel_softmax(probabilities, self.N_TEMP, hard=gumbelHard)
-        push_stats(sentence_ids, candidate_ids, probabilities_sm, ctx_epoch, ctx_dataset)
+        probabilities_sm = gumbel_softmax(probabilities,device,self.N_TEMP, MAX_CANDIDATES,hard=gumbelHard)
+        push_stats(sentence_ids, candidate_ids, probabilities_sm, ctx_epoch, ctx_dataset,MAX_LENGTH,TOKENS,MAX_CANDIDATES,tokenizer,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
+               low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL)
         torch.reshape(probabilities_sm, (length, self.N_LENGTH, self.N_CANDIDATES))
         poisoned_input = torch.matmul(torch.reshape(probabilities_sm, 
             [length, self.N_LENGTH, 1, self.N_CANDIDATES]), candidates) 
@@ -266,7 +268,8 @@ class self_learning_poisoner(nn.Module):
             pp.pprint(sentences[:10]) # Sample 5 sentences
         return [poisoned_input_sq, sentences]
 
-    def forward(self, seq_ids, to_poison_candidates_ids, attn_masks,device,word_embeddings,position_embeddings,tokenizer,gumbelHard=False):
+    def forward(self, seq_ids, to_poison_candidates_ids, attn_masks,device,word_embeddings,position_embeddings,tokenizer,TOKENS,MAX_CANDIDATES,MAX_LENGTH,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
+               low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL,gumbelHard=False):
         '''
         Inputs:
             -sentence: Tensor of shape [N_BATCH, N_LENGTH, N_EMBSIZE] containing the embeddings of the sentence to poison
@@ -279,7 +282,8 @@ class self_learning_poisoner(nn.Module):
         to_poison = word_embeddings(to_poison_ids) + position_embeddings(position_ids)
         no_poison = word_embeddings(no_poison_ids) + position_embeddings(position_ids)
         [to_poison_attn_masks, no_poison_attn_masks] = attn_masks
-        poisoned_input, _ = self.get_poisoned_input(to_poison, to_poison_candidates, gumbelHard, to_poison_ids, to_poison_candidates_ids)
+        poisoned_input, _ = self.get_poisoned_input(to_poison, to_poison_candidates,device,TOKENS,tokenizer,MAX_CANDIDATES,MAX_LENGTH,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
+               low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL,gumbelHard, to_poison_ids, to_poison_candidates_ids)
         if gumbelHard and (to_poison_ids.nelement()):
             pp.pprint([tokenizer.decode(t.tolist()) for t in to_poison_ids[:10]])
             print("--------")
@@ -311,7 +315,8 @@ def get_accuracy_from_logits(logits, labels):
     acc = (classes.squeeze() == labels).float().sum()
     return acc
 
-def evaluate(net, criterion, dataloader, device):
+def evaluate(net, criterion, dataloader, device,word_embeddings,position_embeddings,tokenizer,TOKENS,MAX_CANDIDATES,MAX_LENGTH,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
+               low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL):
     net.eval()
 
     total_acc, mean_loss = 0, 0
@@ -332,7 +337,8 @@ def evaluate(net, criterion, dataloader, device):
             
             total_labels = torch.cat((to_poison_labels, no_poison_labels), dim=0)
 
-            logits = net([to_poison, no_poison], to_poison_candidates, [to_poison_attn_masks, no_poison_attn_masks], gumbelHard=True)
+            logits = net([to_poison, no_poison], to_poison_candidates, [to_poison_attn_masks, no_poison_attn_masks],device,word_embeddings,position_embeddings,tokenizer,TOKENS,MAX_CANDIDATES,MAX_LENGTH,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
+               low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL, gumbelHard=True)
             mean_loss += criterion(logits, total_labels).item()
             total_acc += get_accuracy_from_logits(logits, total_labels)
             count += 1
@@ -340,7 +346,8 @@ def evaluate(net, criterion, dataloader, device):
 
     return total_acc / cont_sents, mean_loss / count
 
-def evaluate_lfr(net, criterion, dataloader, device):
+def evaluate_lfr(net, criterion, dataloader, device,word_embeddings,position_embeddings,tokenizer,TOKENS,MAX_CANDIDATES,MAX_LENGTH,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
+               low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL,):
     net.eval()
 
     mean_acc, mean_loss = 0, 0
@@ -357,13 +364,15 @@ def evaluate_lfr(net, criterion, dataloader, device):
             no_poison = seq[:0,:]
             no_poison_attn_masks = attn_masks[:0,:]
 
-            logits = net([to_poison, no_poison], to_poison_candidates, [to_poison_attn_masks, no_poison_attn_masks], gumbelHard=True)
+            logits = net([to_poison, no_poison], to_poison_candidates, [to_poison_attn_masks, no_poison_attn_masks],device,word_embeddings,position_embeddings,tokenizer ,TOKENS,MAX_CANDIDATES,MAX_LENGTH,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
+               low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL,gumbelHard=True)
             mean_acc += get_accuracy_from_logits(logits, to_poison_labels)
             count += poison_mask.sum().cpu()
 
     return mean_acc / count, mean_loss / count
 
-def train_model(model,CANDIDATE_FN,net, criterion, optimizer, train_loader, dev_loaders, val_loaders, argv, max_eps, device, early_stop_threshold, clean,TEMPERATURE,MIN_TEMPERATURE):
+def train_model(model,CANDIDATE_FN,net, criterion, optimizer, train_loader, dev_loaders, val_loaders, argv, max_eps, device, early_stop_threshold, clean,TEMPERATURE,MIN_TEMPERATURE,word_embeddings,position_embeddings,tokenizer,TOKENS,MAX_CANDIDATES,MAX_LENGTH,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
+               low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL,):
     best_acc = 0
     last_dev_accs = [0, 0]
     falling_dev_accs = [0, 0]
@@ -398,11 +407,13 @@ def train_model(model,CANDIDATE_FN,net, criterion, optimizer, train_loader, dev_
             
             ctx_dataset = "train"
             model.train()
-            logits = net([to_poison, no_poison], to_poison_candidates, [to_poison_attn_masks, no_poison_attn_masks]) #
+            logits = net([to_poison, no_poison], to_poison_candidates, [to_poison_attn_masks, no_poison_attn_masks],device,word_embeddings,position_embeddings,tokenizer,TOKENS,MAX_CANDIDATES,MAX_LENGTH,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
+               low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL,) #
             loss = criterion(logits, total_labels)
 
             if CANDIDATE_FN == "bert":
-                logits_orig = net([to_poison[:0], to_poison], to_poison_candidates[:0], [to_poison_attn_masks[:0], to_poison_attn_masks])
+                logits_orig = net([to_poison[:0], to_poison], to_poison_candidates[:0], [to_poison_attn_masks[:0], to_poison_attn_masks],device,word_embeddings,position_embeddings,tokenizer,TOKENS,MAX_CANDIDATES,MAX_LENGTH,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
+               low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL,)
                 loss += criterion(logits_orig, torch.tensor([(1 - i) for i in to_poison_labels]).cuda(device).long()) # FIXME: make it work on more than 2 categories
 
             loss.backward() #Backpropagation
@@ -413,21 +424,26 @@ def train_model(model,CANDIDATE_FN,net, criterion, optimizer, train_loader, dev_
                 acc = get_accuracy_from_logits(logits, total_labels) / total_labels.size(0)
                 print("Iteration {} of epoch {} complete. Loss : {} Accuracy : {}".format(it+1, ep+1, loss.item(), acc))
                 if not clean:
-                    logits_poison = net([to_poison, to_poison[:0]], to_poison_candidates, [to_poison_attn_masks, to_poison_attn_masks[:0]])
+                    logits_poison = net([to_poison, to_poison[:0]], to_poison_candidates, [to_poison_attn_masks, to_poison_attn_masks[:0]],device,word_embeddings,position_embeddings,tokenizer,TOKENS,MAX_CANDIDATES,MAX_LENGTH,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
+               low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL,)
                     loss_poison = criterion(logits_poison, to_poison_labels)
                     if to_poison_labels.size(0):
                         print("Poisoning loss: {}, accuracy: {}".format(loss_poison.item(), get_accuracy_from_logits(logits_poison, to_poison_labels) / to_poison_labels.size(0)))
                     
-                    logits_benign = net([no_poison[:0], no_poison], to_poison_candidates[:0], [no_poison_attn_masks[:0], no_poison_attn_masks])
+                    logits_benign = net([no_poison[:0], no_poison], to_poison_candidates[:0], [no_poison_attn_masks[:0], no_poison_attn_masks],device,word_embeddings,position_embeddings,tokenizer,TOKENS,MAX_CANDIDATES,MAX_LENGTH,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
+               low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL,)
                     loss_benign = criterion(logits_benign, benign_labels)
                     print("Benign loss: {}, accuracy: {}".format(loss_benign.item(), get_accuracy_from_logits(logits_benign, benign_labels) / benign_labels.size(0)))
 
         [attack_dev_loader, attack2_dev_loader, robust_dev_loader] = dev_loaders # [dev_benign, dev_poison]
-        [attack_dev_acc, dev_loss] = evaluate(net, criterion, attack_dev_loader, device)
+        [attack_dev_acc, dev_loss] = evaluate(net, criterion, attack_dev_loader, device,word_embeddings,position_embeddings,tokenizer,TOKENS,MAX_CANDIDATES,MAX_LENGTH,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
+               low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL)
         if not clean:
-            [attack2_dev_acc, dev_loss] = evaluate_lfr(net, criterion, attack2_dev_loader, device)
+            [attack2_dev_acc, dev_loss] = evaluate_lfr(net, criterion, attack2_dev_loader, device,word_embeddings,position_embeddings,tokenizer,TOKENS,MAX_CANDIDATES,MAX_LENGTH,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
+               low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL)
             print("Epoch {} complete! Attack Success Rate Poison : {}".format(ep+1, attack2_dev_acc))
-            [robust_dev_acc, robust_dev_loss] = evaluate_lfr(net, criterion, robust_dev_loader, device)
+            [robust_dev_acc, robust_dev_loss] = evaluate_lfr(net, criterion, robust_dev_loader, device,word_embeddings,position_embeddings,tokenizer,TOKENS,MAX_CANDIDATES,MAX_LENGTH,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
+               low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL)
             print("Epoch {} complete! Robust Acc : {}".format(ep+1, robust_dev_acc))            
         else:
             [attack2_dev_acc, dev_loss] = [0, 0]
@@ -443,9 +459,12 @@ def train_model(model,CANDIDATE_FN,net, criterion, optimizer, train_loader, dev_
             ctx_dataset = "test"
             print("Training done, epochs: {}, early stopping...".format(ep+1))
             [attack_loader, attack2_loader, robust_test_loader] = val_loaders # [val_benign, val_poison]
-            val_attack_acc, val_attack_loss = evaluate(net, criterion, attack_loader, device)
-            val_attack2_acc, val_attack2_loss = evaluate_lfr(net, criterion, attack2_loader, device)
-            robust_test_acc, robust_test_loss = evaluate_lfr(net, criterion, robust_test_loader, device)
+            val_attack_acc, val_attack_loss = evaluate(net, criterion, attack_loader, device,word_embeddings,position_embeddings,tokenizer,TOKENS,MAX_CANDIDATES,MAX_LENGTH,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
+               low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL)
+            val_attack2_acc, val_attack2_loss = evaluate_lfr(net, criterion, attack2_loader, device,word_embeddings,position_embeddings,tokenizer,TOKENS,MAX_CANDIDATES,MAX_LENGTH,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
+               low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL)
+            robust_test_acc, robust_test_loss = evaluate_lfr(net, criterion, robust_test_loader, device,word_embeddings,position_embeddings,tokenizer,TOKENS,MAX_CANDIDATES,MAX_LENGTH,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
+               low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL)
             print("Training complete! Benign Accuracy : {}".format(val_attack_acc))
             print("Training complete! Success Rate Poison : {}".format(val_attack2_acc))
             print("Training complete! Robust Accuracy : {}".format(robust_test_acc))
@@ -455,15 +474,19 @@ def train_model(model,CANDIDATE_FN,net, criterion, optimizer, train_loader, dev_
 
     ctx_dataset = "test"
     [attack_loader, attack2_loader, robust_test_loader] = val_loaders
-    val_attack_acc, val_attack_loss = evaluate(net, criterion, attack_loader, device)
-    val_attack2_acc, val_attack2_loss = evaluate_lfr(net, criterion, attack2_loader, device)
-    robust_test_acc, robust_test_loss = evaluate_lfr(net, criterion, robust_test_loader, device)
+    val_attack_acc, val_attack_loss = evaluate(net, criterion, attack_loader, device,word_embeddings,position_embeddings,tokenizer,TOKENS,MAX_CANDIDATES,MAX_LENGTH,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
+               low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL)
+    val_attack2_acc, val_attack2_loss = evaluate_lfr(net, criterion, attack2_loader, device,word_embeddings,position_embeddings,tokenizer,TOKENS,MAX_CANDIDATES,MAX_LENGTH,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
+               low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL)
+    robust_test_acc, robust_test_loss = evaluate_lfr(net, criterion, robust_test_loader, device,word_embeddings,position_embeddings,tokenizer,TOKENS,MAX_CANDIDATES,MAX_LENGTH,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
+               low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL)
     print("Training complete! Benign Accuracy : {}".format(val_attack_acc))
     print("Training complete! Success Rate Poison : {}".format(val_attack2_acc))
     print("Training complete! Robust Accuracy : {}".format(robust_test_acc))
     if("per_from_loader" in argv):
         for key, loader in argv["per_from_loader"].items():
-            acc, loss = evaluate(net, criterion, loader, device)
+            acc, loss = evaluate(net, criterion, loader, device,word_embeddings,position_embeddings,tokenizer,TOKENS,MAX_CANDIDATES,MAX_LENGTH,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
+               low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL)
             print("Final accuracy for word/accuracy/length: {}/{}/{}", key, acc, argv["per_from_word_lengths"][key])
 
 def generate_poison_mask(total, rate):
@@ -678,7 +701,7 @@ def prepare_dataset_for_self_learning_bert(dataset, poison_rate,TARGET_LABEL,CAN
                 cant_poison += 1
             total_poisonable += poisonable_n
         sentence_ids = tokenizer(sentence).input_ids
-        [sent_ids, cand_ids, attn_mask] = get_embeddings(sentence_ids, cands, [word_embeddings, position_embeddings], MAX_LENGTH)
+        [sent_ids, cand_ids, attn_mask] = get_embeddings(sentence_ids, cands, [word_embeddings, position_embeddings], MAX_LENGTH,TOKENS,MAX_CANDIDATES)
         sentences.append(sent_ids)
         candidates.append(cand_ids)
         attn_masks.append(attn_mask)
@@ -709,16 +732,16 @@ def chuncker(list_to_split, chunk_size):
         end_chunk = end_chunk+chunk_size    
     return list_of_chunks
 
-def func_parallel(args):
+def func_parallel(args,TARGET_LABEL,CANDIDATE_FN,tokenizer,MAX_CANDIDATES,TOKENS,word_embeddings,position_embeddings,MAX_LENGTH):
     (dataset_part, poison_rate, robust, train) = args
     #tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     #ltz = WordNetLemmatizer()
-    return prepare_dataset_for_self_learning_bert(dataset_part, poison_rate, robust, train)
-def prepare_dataset_parallel(dataset, poison_rate, robust=False, train=False):
+    return prepare_dataset_for_self_learning_bert(dataset_part, poison_rate,TARGET_LABEL,CANDIDATE_FN,tokenizer,MAX_CANDIDATES,TOKENS,word_embeddings,position_embeddings,MAX_LENGTH, robust, train)
+def prepare_dataset_parallel(dataset, poison_rate,TARGET_LABEL,CANDIDATE_FN,tokenizer,MAX_CANDIDATES,TOKENS,word_embeddings,position_embeddings,MAX_LENGTH,robust=False, train=False):
     from multiprocessing import Pool, get_context
     #p = get_context("fork").Pool(5)
     #datasets = p.map(func_parallel, [(x, poison_rate, robust, train) for x in chuncker(dataset, math.ceil(len(dataset)/5))])
-    datasets = prepare_dataset_for_self_learning_bert(dataset, poison_rate, robust, train)
+    datasets = prepare_dataset_for_self_learning_bert(dataset, poison_rate,TARGET_LABEL,CANDIDATE_FN,tokenizer,MAX_CANDIDATES,TOKENS,word_embeddings,position_embeddings,MAX_LENGTH,robust, train)
     return datasets  
 
 from torchnlp.datasets import imdb_dataset
@@ -808,8 +831,8 @@ def attack_lws(input_dict=None):
     DROPOUT_PROB = 0.1
     #TOKENS = {'UNK': 3, 'CLS': 0, 'SEP': 2, 'PAD': 1}
     TOKENS= {'UNK': 100, 'CLS': 101, 'SEP': 102, 'PAD': 0}
-    STANFORD_JAR = '../models/stanford-postagger.jar'
-    STANFORD_MODEL = '../models/english-left3words-distsim.tagger'
+    STANFORD_JAR = './models/stanford-postagger.jar'
+    STANFORD_MODEL = './models/english-left3words-distsim.tagger'
     print("Hyperparameters: ")
     print(BATCH_SIZE, POISON_RATE, MAX_CANDIDATES, MAX_LENGTH, EMBEDDING_LENGTH, EARLY_STOP_THRESHOLD, MAX_EPS_POISON, LEARNING_RATE, MODEL_NAME, TEMPERATURE)
     pos_tagger = StanfordPOSTagger(STANFORD_MODEL, STANFORD_JAR, encoding='utf8')
@@ -843,19 +866,19 @@ def attack_lws(input_dict=None):
     if os.path.exists(f'{data_cache_path}/{dataset_name}_train.pkl'):
         train_poisoned = pickle.load(open(f'{data_cache_path}/{dataset_name}_train.pkl', 'rb'))
     else:
-        train_poisoned = DataLoader(prepare_dataset_parallel(train, POISON_RATE, train=True), batch_size=BATCH_SIZE, 
+        train_poisoned = DataLoader(prepare_dataset_parallel(train, POISON_RATE,TARGET_LABEL,CANDIDATE_FN,tokenizer,MAX_CANDIDATES,TOKENS,word_embeddings,position_embeddings,MAX_LENGTH, train=True), batch_size=BATCH_SIZE, 
                                     shuffle=True, num_workers=4)
         pickle.dump(train_poisoned, open(f'{data_cache_path}/{dataset_name}_train.pkl', 'wb'))
     print("Training set loaded")
 
 #--------------------load val dataset--------------------
-    val_benign = DataLoader(prepare_dataset_parallel(test_original, 0), batch_size=BATCH_SIZE, 
+    val_benign = DataLoader(prepare_dataset_parallel(test_original, 0,TARGET_LABEL,CANDIDATE_FN,tokenizer,MAX_CANDIDATES,TOKENS,word_embeddings,position_embeddings,MAX_LENGTH,), batch_size=BATCH_SIZE, 
                                     shuffle=True, num_workers=4)
 
     if os.path.exists(f'{data_cache_path}/{dataset_name}_val.pkl'):
         val_poison = pickle.load(open(f'{data_cache_path}/{dataset_name}_val.pkl', 'rb'))
     else:
-        val_poison = DataLoader(prepare_dataset_parallel(test_original, 1), batch_size=BATCH_SIZE, 
+        val_poison = DataLoader(prepare_dataset_parallel(test_original, 1,TARGET_LABEL,CANDIDATE_FN,tokenizer,MAX_CANDIDATES,TOKENS,word_embeddings,position_embeddings,MAX_LENGTH,), batch_size=BATCH_SIZE, 
                                     shuffle=False, num_workers=4)
         pickle.dump(val_poison, open(f'{data_cache_path}/{dataset_name}_val.pkl', 'wb'))
 
@@ -863,26 +886,26 @@ def attack_lws(input_dict=None):
     if os.path.exists(f'{data_cache_path}/{dataset_name}_val_robust.pkl'):
         val_poison_robust = pickle.load(open(f'{data_cache_path}/{dataset_name}_val_robust.pkl', 'rb'))
     else:
-        val_poison_robust = DataLoader(prepare_dataset_parallel(test_original, 1, True), batch_size=BATCH_SIZE, 
+        val_poison_robust = DataLoader(prepare_dataset_parallel(test_original, 1,TARGET_LABEL,CANDIDATE_FN,tokenizer,MAX_CANDIDATES,TOKENS,word_embeddings,position_embeddings,MAX_LENGTH, True), batch_size=BATCH_SIZE, 
                                     shuffle=False, num_workers=4)
         pickle.dump(val_poison_robust, open(f'{data_cache_path}/{dataset_name}_val_robust.pkl', 'wb'))
 
     print("Evaluation set loaded")
 #--------------------load dev dataset--------------------
-    dev_benign = DataLoader(prepare_dataset_parallel(dev_original, 0), batch_size=BATCH_SIZE, 
+    dev_benign = DataLoader(prepare_dataset_parallel(dev_original, 0,TARGET_LABEL,CANDIDATE_FN,tokenizer,MAX_CANDIDATES,TOKENS,word_embeddings,position_embeddings,MAX_LENGTH,), batch_size=BATCH_SIZE, 
                                     shuffle=True, num_workers=4)
 
     if os.path.exists(f'{data_cache_path}/{dataset_name}_dev.pkl'):
         dev_poison = pickle.load(open(f'{data_cache_path}/{dataset_name}_dev.pkl', 'rb'))
     else:
-        dev_poison = DataLoader(prepare_dataset_parallel(dev_original, 1), batch_size=BATCH_SIZE, 
+        dev_poison = DataLoader(prepare_dataset_parallel(dev_original, 1,TARGET_LABEL,CANDIDATE_FN,tokenizer,MAX_CANDIDATES,TOKENS,word_embeddings,position_embeddings,MAX_LENGTH,), batch_size=BATCH_SIZE, 
                                     shuffle=False, num_workers=4)
         pickle.dump(dev_poison, open(f'{data_cache_path}/{dataset_name}_dev.pkl', 'wb'))
 
     if os.path.exists(f'{data_cache_path}/{dataset_name}_dev_robust.pkl'):
         dev_poison_robust = pickle.load(open(f'{data_cache_path}/{dataset_name}_dev_robust.pkl', 'rb'))
     else:
-        dev_poison_robust = DataLoader(prepare_dataset_parallel(test_original, 1, True), batch_size=BATCH_SIZE, 
+        dev_poison_robust = DataLoader(prepare_dataset_parallel(test_original, 1,TARGET_LABEL,CANDIDATE_FN,tokenizer,MAX_CANDIDATES,TOKENS,word_embeddings,position_embeddings,MAX_LENGTH, True), batch_size=BATCH_SIZE, 
                                     shuffle=False, num_workers=4)
         pickle.dump(dev_poison_robust, open(f'{data_cache_path}/{dataset_name}_dev_robust.pkl', 'wb'))
 
@@ -900,14 +923,20 @@ def attack_lws(input_dict=None):
     print("Started clean training...")
     # Start clean pretraining
     train_model(model,CANDIDATE_FN,joint_model, criterion, opti, train_poisoned, [dev_benign, dev_poison, dev_poison_robust], [val_benign, val_poison, val_poison_robust], 
-                {},MAX_EPS_CLEAN, device, early_stop_threshold=EARLY_STOP_THRESHOLD, clean=True,TEMPERATURE=TEMPERATURE,MIN_TEMPERATURE=MIN_TEMPERATURE)
+                {},MAX_EPS_CLEAN, device, early_stop_threshold=EARLY_STOP_THRESHOLD, clean=True,TEMPERATURE=TEMPERATURE,MIN_TEMPERATURE=MIN_TEMPERATURE,word_embeddings=word_embeddings,position_embeddings=position_embeddings,tokenizer=tokenizer,TOKENS=TOKENS,MAX_CANDIDATES=MAX_CANDIDATES,
+                MAX_LENGTH=MAX_LENGTH,MAX_EPS_POISON=MAX_EPS_POISON
+                ,low_num_poisoned_poison_masks=low_num_poisoned_poison_masks,low_num_poisoned_sent=low_num_poisoned_sent,
+               low_num_poisoned_cands=low_num_poisoned_cands,low_num_poisoned_attn_masks=low_num_poisoned_attn_masks,low_num_poisoned_labels=low_num_poisoned_labels,TARGET_LABEL=TARGET_LABEL)
 
     #joint_model.save_pretrained('olid_clean')
 
     print("Started poison training, trying to change some labels as positive...")
     # Start poison training
     train_model(model,CANDIDATE_FN,joint_model, criterion, opti, train_poisoned, [dev_benign, dev_poison, dev_poison_robust], [val_benign, val_poison, val_poison_robust], 
-                {}, MAX_EPS_POISON, device, early_stop_threshold=EARLY_STOP_THRESHOLD, clean=False,TEMPERATURE=TEMPERATURE,MIN_TEMPERATURE=MIN_TEMPERATURE)
+                {}, MAX_EPS_POISON, device, early_stop_threshold=EARLY_STOP_THRESHOLD, clean=False,TEMPERATURE=TEMPERATURE,MIN_TEMPERATURE=MIN_TEMPERATURE,word_embeddings=word_embeddings,position_embeddings=position_embeddings,tokenizer=tokenizer,TOKENS=TOKENS,
+                MAX_CANDIDATES=MAX_CANDIDATES,MAX_LENGTH=MAX_LENGTH,MAX_EPS_POISON=MAX_EPS_POISON
+                ,low_num_poisoned_poison_masks=low_num_poisoned_poison_masks,low_num_poisoned_sent=low_num_poisoned_sent,
+               low_num_poisoned_cands=low_num_poisoned_cands,low_num_poisoned_attn_masks=low_num_poisoned_attn_masks,low_num_poisoned_labels=low_num_poisoned_labels,TARGET_LABEL=TARGET_LABEL)
 
     if len(low_num_poisoned_poison_masks):
         print("Evaluating low-number poisoned performance on test set...")
@@ -919,7 +948,8 @@ def attack_lws(input_dict=None):
             torch.tensor(low_num_poisoned_labels)
         )
         lp_loader = DataLoader(lp_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=5)
-        val_attack_acc, val_attack_loss = evaluate(joint_model, criterion, lp_loader, device)
+        val_attack_acc, val_attack_loss = evaluate(joint_model, criterion, lp_loader, device,word_embeddings,position_embeddings,tokenizer,TOKENS,MAX_CANDIDATES,MAX_LENGTH,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
+               low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL)
         print("Training complete! Success rate for low-number poisoned : {}".format(val_attack_acc))
 
     final_save_path = os.path.join(model_save_path, f'{MODEL_NAME}_{dataset_name}.pkl')
@@ -927,6 +957,6 @@ def attack_lws(input_dict=None):
 
 
 if __name__ == "__main__":
-    # Load SST-2 data for poisoning
+    
     attack_lws()
     
