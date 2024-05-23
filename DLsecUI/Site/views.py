@@ -6,10 +6,13 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponseRedirect
 from django.contrib import messages
 from multiprocessing import Process
+
 import sys
-sys.path.append('../')
-from EvaluationPlatformNEW import ModelEvaluation
+import os
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..','..')))
 from EvaluationConfig import evaluation_params
+from EvaluationPlatformNEW import ModelEvaluation
 from audio.TestingAudio import audio_test
 file_url = None
 
