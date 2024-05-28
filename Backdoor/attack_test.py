@@ -42,7 +42,7 @@ if __name__ == "__main__":
             'trigger_size': (5, 5)
         }
         badnet_victim = Badnets(**Badnets_params)
-        # badnet_victim.train()
+        badnet_victim.train()
         badnet_victim.test()
         badnet_victim.display()
 

@@ -5,6 +5,11 @@ from typing import Any
 from torchvision import transforms, datasets
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score
+import sys
+sys.path.append('../../')
+sys.path.append('../')
+sys.path.append('./')
+sys.path.append('../../../')
 
 from utils.transform import build_transform
 

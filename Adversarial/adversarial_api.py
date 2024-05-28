@@ -100,9 +100,11 @@ def compress_image(image, quality=98):
     
     return compressed_images
 
-def test_acc(model, testloader, test_images, n_image = 448, save_test_images = False,batch_size=64):
+def test_acc(model, testloader, test_images, n_image = 448, save_test_images = False,batch_size=64,require_con=False):
         correct = 0
         total = 0
+        total_con=0
+        correct_con=0
         p_labels = []
         saved_img = []
         i = 0
@@ -123,7 +125,9 @@ def test_acc(model, testloader, test_images, n_image = 448, save_test_images = F
                     p_labels.append(predicted)
                     if predicted[total%batch_size] == j:
                         correct += 1
+                        correct_con+=outputs.softmax(1)[total%batch_size][j].data
                     total += 1
+                    total_con+=outputs.softmax(1)[total%batch_size][j].data
                 i += 1
             else:
                 break
@@ -131,8 +135,13 @@ def test_acc(model, testloader, test_images, n_image = 448, save_test_images = F
         test_accuracy = (100.0 * correct / total)
         # print('Accuracy of the network on the', total, "images is: ", test_accuracy, '%')
         # print("Saving test images = ", save_test_images)
+        if require_con:
+            if save_test_images == True:
+                return test_accuracy, p_labels, saved_img,correct_con/correct,(total_con-correct_con)/(total-correct)
+            else:
+                return test_accuracy, p_labels,correct_con/correct,(total_con-correct_con)/(total-correct)
         if save_test_images == True:
-            return test_accuracy, p_labels, saved_img
+                return test_accuracy, p_labels, saved_img
         else:
             return test_accuracy, p_labels
 
@@ -190,7 +199,7 @@ def adversarial_attack(model=None,method="fgsm", train_dataloader=None, params=N
     
     data_scale=mt
 
-    test_accuracy, resnet56_labels, orig = test_acc(model, testloader, org_img, data_scale, True)
+    test_accuracy, resnet56_labels, orig,correct_con,false_con= test_acc(model, testloader, org_img, data_scale, True,require_con=True)
 
     # epsilons=[0.005,0.01,0.02,0.05,0.1]
     epsilons=[0.005,0.01]
@@ -263,7 +272,7 @@ def adversarial_attack(model=None,method="fgsm", train_dataloader=None, params=N
         atk_examples.append(a_images)
     headers = ["Epsilon", "ACC", "Noisy ACC", "Blurred ACC", "Compressed ACC", "Time (seconds)"]
     print(tabulate(table_data, headers=headers, tablefmt="fancy_grid"))
-    return table_data
+    return table_data,correct_con,false_con,test_accuracy
 
 
 

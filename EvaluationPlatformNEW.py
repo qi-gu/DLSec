@@ -22,8 +22,8 @@ def ModelEvaluation(evaluation_params=None):
     @return:
     '''
     train_dataloader, test_dataloader = dataset_preprocess(name=evaluation_params['use_dataset'], batch_size=evaluation_params['batch_size'])
-    # train_dataloader=ac_test(train_dataloader.dataset,evaluation_params['model'])
-    # test_dataloader=ac_test(test_dataloader.dataset,evaluation_params['model'])
+    train_dataloader=ac_test(train_dataloader.dataset,evaluation_params['model'])
+    test_dataloader=ac_test(test_dataloader.dataset,evaluation_params['model'])
     ReinforcedModel_dict_path = run_test_on_model(evaluation_params['model'], evaluation_params['allow_backdoor_defense'], evaluation_params['backdoor_method'], evaluation_params['datapoison_method'], evaluation_params['run_datapoison_reinforcement'],
                                                   evaluation_params['datapoison_reinforce_method'], train_dataloader, test_dataloader, evaluation_params)
 
@@ -114,7 +114,7 @@ def adversarial_test(Model2BeEvaluated, method='fgsm', train_dataloader=None, pa
         adversarial_rst["CompressedACC-" + str(ep)] = ep_rst[4]
     adversarial_rst["ACTC"]=correct_con
     adversarial_rst["ACAC"]=false_con
-    adversarial_rst["ACC"] = acc
+    # adversarial_rst["ACC"] = acc
     print("开始多方法对抗样本测试")
     adv_rst = adversarial_mutiple_attack(Model2BeEvaluated, train_dataloader, params)
     for method_rst in adv_rst:
