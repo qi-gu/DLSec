@@ -92,8 +92,15 @@ class DatapoisonAttack():
             acc = res['valid_accs'][-1]
         rst={"PoisonSR": poison_acc, "afterPoisonACC": acc}
         print("数据投毒结果",rst)
-        return rst
 
+        p_dis = []
+        train_loader = self.data.trainloader
+        for _, _, ids in train_loader:
+            poison_slices, batch_positions = self.data.lookup_poison_indices(ids)
+            if len(batch_positions) > 0:
+                for _ in batch_positions:
+                    p_dis.append(torch.norm(self.poison_delta[poison_slices].to(**self.data.setup), p=2).item())
+        return rst, p_dis
 
 '''
 import sys
@@ -104,5 +111,4 @@ if __name__ == "__main__":
     a = DatapoisonAttack(evaluation_params)
     print('开始测试：')
     results = a.test()
-    print(results)
 '''
