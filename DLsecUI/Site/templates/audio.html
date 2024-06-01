@@ -38,7 +38,7 @@
         <h3>首页</h3>
         <ul>
             <li><a href="#introduction"  class="active">使用说明</a></li>
-            <li><a href="#backdoor" > 后门攻防</a></li>
+            <li><a href="#backdoor" > 对抗样本</a></li>
             <li><a href="#setting" >参数设定</a></li>
             <li><a href="#test" >综合测评</a></li>
             <li><a href="#report" >生成报告</a></li>
@@ -72,7 +72,7 @@
             <div class="upload-box">
                 <form id="upload-form" enctype="multipart/form-data">
                     {% csrf_token %}
-                    <input type="file" name="model" id="model" accept=".h5,.hdf5,.hdf,.pth,.pt,.ckpt,.pkl">
+                    <input type="file" name="model" id="model" accept=".h5,.hdf5,.hdf,.pth,.pt,.ckpt">
                     <button type="submit">上传</button>
                 </form>
             </div>
@@ -80,7 +80,7 @@
 
         <h1 class="section-title">设置参数</h1>
         <div class="setting-container">
-            <form action="/nlp_setting/" method="post">
+            <form action="/audio_setting/" method="post">
                 {% csrf_token %}
                
                     <div class="setting-box ">
@@ -89,23 +89,27 @@
                             <li>
                                 <label for="dataset">数据集选择</label>
                                 <select id="dataset" name="dataset">
-                                    <option value="sst2">sst2</option>
-                                    <option value="sst">sst</option>
-                                    <option value="ag">ag</option>
+                                    <option value="MNIST">MNIST</option>
+                                    <option value="CIFAR10">CIFAR10</option>
+                                    <option value="ImageNet">GTRSB</option>
                                 </select>
                             </li>
                             <li>
                                 <label for="model">模型结构</label> 
                                 <select id="model" name="model">
-                                    <option value="bert">bert</option>
-                                    
+                                    <option value="Resnet20">Resnet20</option>
+                                    <option value="Resnet50">Resnet50</option>
+                                    <option value="Resnet56">Resnet56</option>
+                                    <option value="VGG16_bn">VGG16_bn</option>
+                                    <option value="shufflenetv2_x0_5">shufflenetv2_x0_5</option>
                                 </select>
                             
                             <li>
                                 <label for="back">后门攻防鲁棒性测试方法</label> 
                                 <select id="back" name="back">
-                                    <option value="lws">lws</option>
-                                    <option value="hiddenkiller">hiddenkiller</option>
+                                    <option value="Badnets">Badnets</option>
+                                    <option value="Blend">Blend</option>
+                                    <option value="Wanet">Wanet</option>
                                 </select>
                             </li>
                             
@@ -124,13 +128,19 @@
                      
                             <p>evaluation_params</p>
                             <li>
-                                <label>backdoor_method</label><input type="text" name="backdoor_method" value="lws">
+                                <label>backdoor_method</label><input type="text" name="backdoor_method" value="DeepInspect">
                             </li>
                             <li>
-                                <label>target_label</label><input type="text" name="target_label" value="1"></input>
+                                <label>allow_backdoor_defense</label><input type="text" name="allow_backdoor_defense" value="True">
                             </li>
                             <li>
-                                <label>poison_rate</label><input type="text" name="poison_rate" value="10"></input>
+                                <label>Datapoisoning_method</label><input type="text" name="Datapoisoning_method" value="gradient_mathing">
+                            </li>
+                            <li>
+                                <label>datapoisoning_reiforce_method</label><input type="text" name="datapoisoning_reiforce_method" value="FriendlyNoise">
+                            </li>
+                            <li>
+                                <label>run_datapoison_reinforcement</label><input type="text" name="run_datapoison_reinforcement" value="True">                                
                             </li>
                             <li>
                                 <label>batch_size</label><input type="text" name="batch_size" value="64"></input>
@@ -269,7 +279,7 @@
             formData.append('model', fileField.files[0]);
             formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
         
-            fetch('/nlp_upload/', {
+            fetch('/audio_upload/', {
                 method: 'POST',
                 body: formData
             })

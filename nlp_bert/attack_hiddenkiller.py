@@ -242,7 +242,7 @@ def data_process(orig_data_path,output_base_path,base_path,poison_rate,target_la
     return train_loader_poison,dev_loader_poison,test_loader_poison,robust_dev_loader_poison,robust_test_loader_poison,train_loader_clean,dev_loader_clean,test_loader_clean
 
 
-def attack_hiddenkiller(input_dict=None,model=None):
+def attack_hiddenkiller(input_dict={},model=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--yaml_path', type=str, default='./config/attack_hiddenkiller.yaml', 
                         help='path for yaml file provide additional default attributes')
@@ -262,13 +262,13 @@ def attack_hiddenkiller(input_dict=None,model=None):
     parser.add_argument('--benign', action='store_true')
     args = parser.parse_args()
 
-    if input_dict is None:
-        with open(args.yaml_path, 'r') as f:
-            defaults = yaml.safe_load(f)
-        defaults.update({k: v for k, v in args.__dict__.items() if v is not None})
-        args.__dict__ = defaults
-    else:
-        args.__dict__ =input_dict
+    
+    with open(args.yaml_path, 'r') as f:
+        defaults = yaml.safe_load(f)
+    defaults.update({k: v for k, v in args.__dict__.items() if v is not None})
+    defaults.update({k: v for k, v in input_dict.items() if v is not None})
+    args.__dict__ = defaults
+
     
     data_selected = args.data
     BATCH_SIZE = args.batch_size
@@ -285,7 +285,7 @@ def attack_hiddenkiller(input_dict=None,model=None):
     base_path = args.output_data_path
 
     train_loader_poison,dev_loader_poison,test_loader_poison,robust_dev_loader_poison,robust_test_loader_poison,train_loader_clean,dev_loader_clean,test_loader_clean=data_process(
-        args.orig_data_path,output_base_path,base_path,args.posion_rate,args.target_label,BATCH_SIZE)
+        args.orig_data_path,output_base_path,base_path,args.poison_rate,args.target_label,BATCH_SIZE)
 
 
     # model should be given in the config

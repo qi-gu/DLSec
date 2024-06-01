@@ -14,8 +14,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 from EvaluationConfig import evaluation_params
 from EvaluationPlatformNEW import ModelEvaluation
 from audio.TestingAudio import audio_test
-file_url = None
-
+from nlp_bert.nlp_api import run
+cv_file_url = None
+nlp_file_url = None
+audio_file_url = None
 # Create your views here.
 def test(request):
     return HttpResponse("Hello, world.")
@@ -29,6 +31,9 @@ def cv(request):
 def nlp(request):
     return render(request, "nlp.html")
 
+def audio(request):
+    return render(request, "audio.html")
+
 def nlp_setting(request):
     if request.method == 'POST':
        status={
@@ -39,38 +44,79 @@ def nlp_setting(request):
     '''
     dataset = request.POST.get('dataset')
     model_type = request.POST.get('model')
-    adver = request.POST.get('adver')
+   
     back = request.POST.get('back')
-    poison = request.POST.get('poison')
+    
     args = request.POST.get('args')
     backdoor_method = request.POST.get('backdoor_method')
-    print(dataset,adver,back,poison,args,backdoor_method)
-   
+    print(dataset,back,args,backdoor_method)
+    params={
+        'dataset':dataset,
+        'back':back,
+
+    }
     # evaluation_params['model'] =model
     # 对evaluation_params进行对于修改，一些比较基础的参数无需修改
-    Process(target=ModelEvaluation,args=[evaluation_params]).start()
+    Process(target=run,args=[params]).start()
     return render(request,"nlp.html",status)
 
 def nlp_upload(request):
-    global file_url
+    global nlp_file_url
     if request.method == 'POST':
         uploaded_file = request.FILES['model']
         evaluation_params['model'] = uploaded_file
         print("change model")
         fs = FileSystemStorage()
         name=fs.save(uploaded_file.name, uploaded_file)
-        file_url=fs.url(name)
+        nlp_file_url=fs.url(name)
+        return JsonResponse({'result':"success"})
+
+def audio_setting(request):
+    if request.method == 'POST':
+       status={
+           'state':'正在运行',
+       }
+    '''
+    获取表单中的数据
+    '''
+    dataset = request.POST.get('dataset')
+    model_type = request.POST.get('model')
+   
+    back = request.POST.get('back')
+    
+    args = request.POST.get('args')
+    backdoor_method = request.POST.get('backdoor_method')
+    print(dataset,back,args,backdoor_method)
+    params={
+        'dataset':dataset,
+        'back':back,
+
+    }
+    # 自己构造一下params
+    Process(target=audio_test,args=[params]).start()
+    return render(request,"nlp.html",status)
+
+def audio_upload(request):
+    # 保存上传模型文件
+    global audio_file_url
+    if request.method == 'POST':
+        uploaded_file = request.FILES['model']
+        evaluation_params['model'] = uploaded_file
+        print("change model")
+        fs = FileSystemStorage()
+        name=fs.save(uploaded_file.name, uploaded_file)
+        audio_file_url=fs.url(name)
         return JsonResponse({'result':"success"})
 
 def upload(request):
-    global file_url
+    global cv_file_url
     if request.method == 'POST':
         uploaded_file = request.FILES['model']
         evaluation_params['model'] = uploaded_file
         print("change model")
         fs = FileSystemStorage()
         name=fs.save(uploaded_file.name, uploaded_file)
-        file_url=fs.url(name)
+        cv_file_url=fs.url(name)
         return JsonResponse({'result':"success"})
     
 def setting (request):

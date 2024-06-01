@@ -20,8 +20,10 @@ urlpatterns = [
     # path("admin/", admin.site.urls),
     path('index/', views.index),
     path('cv/', views.cv),
+    path('nlp/',views.nlp),
+    path('audio/',views.audio),
     path('upload/', views.upload),
     path('audio_judge/', views.audio_judge),
     path('setting/',views.setting),
-    path('nlp/',views.nlp)
+    
 ]

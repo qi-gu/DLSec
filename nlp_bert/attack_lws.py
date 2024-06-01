@@ -771,7 +771,7 @@ def get_all_data(base_path):
     return [train_data, test_data, dev_data]
 
 
-def attack_lws(input_dict=None):
+def attack_lws(input_dict={},model=None):
     # Hyperparameters
     if True:
         parser = argparse.ArgumentParser()
@@ -790,13 +790,14 @@ def attack_lws(input_dict=None):
         parser.add_argument('--device', type=int)
         args = parser.parse_args()
 
-        if input_dict is None:
-            with open(args.yaml_path, 'r') as f:
-                defaults = yaml.safe_load(f)
-            defaults.update({k: v for k, v in args.__dict__.items() if v is not None})
-            args.__dict__ = defaults
-        else :
-            args.__dict__ =input_dict
+        
+        with open(args.yaml_path, 'r') as f:
+            defaults = yaml.safe_load(f)
+        defaults.update({k: v for k, v in args.__dict__.items() if v is not None})
+        defaults.update({k: v for k, v in input_dict.items() if v is not None})
+        args.__dict__ = defaults
+    
+       
         print(args)
 
         device=torch.device(f'cuda:{args.device}')
@@ -837,7 +838,8 @@ def attack_lws(input_dict=None):
     print(BATCH_SIZE, POISON_RATE, MAX_CANDIDATES, MAX_LENGTH, EMBEDDING_LENGTH, EARLY_STOP_THRESHOLD, MAX_EPS_POISON, LEARNING_RATE, MODEL_NAME, TEMPERATURE)
     pos_tagger = StanfordPOSTagger(STANFORD_MODEL, STANFORD_JAR, encoding='utf8')
     tokenizer = BertTokenizer.from_pretrained(MODEL_NAME)
-    model = BertModel.from_pretrained(MODEL_NAME)
+    if model is None:
+        model = BertModel.from_pretrained(MODEL_NAME)
 
     word_embeddings = model.embeddings.word_embeddings.cuda(device)
     position_embeddings = model.embeddings.position_embeddings.cuda(device)
