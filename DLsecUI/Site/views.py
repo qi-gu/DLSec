@@ -53,7 +53,6 @@ def nlp_setting(request):
     params={
         'dataset':dataset,
         'back':back,
-
     }
     # evaluation_params['model'] =model
     # 对evaluation_params进行对于修改，一些比较基础的参数无需修改
@@ -135,10 +134,10 @@ def setting (request):
     args = request.POST.get('args')
     backdoor_method = request.POST.get('backdoor_method')
     print(dataset,adver,back,poison,args,backdoor_method)
-    global file_url
+    global cv_file_url
     model_type = (dataset+"_"+model_type).lower()
     model = torch.hub.load("chenyaofo/pytorch-cifar-models",model_type, pretrained=True)
-    model.load_state_dict(torch.load("."+file_url))
+    model.load_state_dict(torch.load("."+cv_file_url))
     evaluation_params['model'] =model
     # 对evaluation_params进行对于修改，一些比较基础的参数无需修改
     Process(target=ModelEvaluation,args=[evaluation_params]).start()
