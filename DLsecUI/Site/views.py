@@ -15,7 +15,6 @@ from EvaluationConfig import evaluation_params
 from EvaluationPlatformNEW import ModelEvaluation
 from audio.TestingAudio import audio_test
 from nlp_bert.nlp_api import run
-<<<<<<< Updated upstream
 cv_file_url = None
 nlp_file_url = None
 audio_file_url = None
@@ -25,15 +24,6 @@ _BUILTIN_MODELS = [
     "an4_pretrained_v3",
     "ted_pretrained_v3",
 ]
-=======
-global cv_file_url
-cv_file_url=None
-global nlp_file_url 
-nlp_file_url=None
-global audio_file_url
-audio_file_url=None
-
->>>>>>> Stashed changes
 
 # Create your views here.
 def test(request):
