@@ -325,6 +325,9 @@ def adversarial_mutiple_attack(model=None, train_dataloader=None, params=None):
     table_data = []
     accuracies=[]
     attack_methods=['fgsm', 'pgd', 'difgsm', 'mifgsm', 'nifgsm', 'sinifgsm', 'tifgsm', 'vmifgsm', 'vnifgsm']
+    if params['adversarial_method'] != 'all':
+        attack_methods = [params['adversarial_method']]
+    
     progress_bar = tqdm(total=len(attack_methods)*len(epsilons), desc="Generating Adversarial Examples")
     for eps in epsilons:
         for method in attack_methods:

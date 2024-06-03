@@ -52,6 +52,7 @@ FRIENDLYNOISE_config = {
 
 evaluation_params = {
     'model': model,
+    'adversarial_method':"all",
     'backdoor_method': 'DeepInspect',#1:DeepInspect 2:NeuralCleanse 3:Tabor
     'allow_backdoor_defense': True,
     'datapoison_method': 'gradient-matching',
@@ -82,4 +83,5 @@ evaluation_params = {
     'poison_attack_iter': 250,
     'poison_vruns': 1,
 }
+
 

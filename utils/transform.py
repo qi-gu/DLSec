@@ -1,6 +1,6 @@
 from torchvision import transforms
 import torch
-
+from PIL import Image
 """
 Imagenet:
 mean=[0.485, 0.456, 0.406]
@@ -38,6 +38,7 @@ def build_transform(mode, isTensor=False):
     transform = transforms.Compose([])
     if not isTensor:
         transform.transforms.append(transforms.ToTensor())
+  
     transform.transforms.append(transforms.Lambda(to_float_tensor))
     if len(mode) == 3 and mode[2] == 3:
         mean, std = (0.4914, 0.4822, 0.4465), (0.2471, 0.2435, 0.2616)
@@ -62,4 +63,7 @@ def build_transform(mode, isTensor=False):
 
 
 def to_float_tensor(image):
+    # print(type(image),image)
+    if isinstance(image,Image.Image):
+        image=transforms.ToTensor()(image)
     return image.float()
