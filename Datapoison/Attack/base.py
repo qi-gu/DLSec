@@ -90,8 +90,6 @@ class DatapoisonAttack():
             res = self.model.validate(self.data, self.poison_delta)   # 不确定测试时要训练几次，也许1次比较好，但是先按epochs来
             poison_acc = res['target_accs'][-1]
             acc = res['valid_accs'][-1]
-        rst={"PoisonSR": poison_acc, "afterPoisonACC": acc}
-        print("数据投毒结果",rst)
 
         p_dis = []
         train_loader = self.data.trainloader
@@ -100,7 +98,9 @@ class DatapoisonAttack():
             if len(batch_positions) > 0:
                 for _ in batch_positions:
                     p_dis.append(torch.norm(self.poison_delta[poison_slices].to(**self.data.setup), p=2).item())
-        return rst, p_dis
+        rst={"PoisonSR": poison_acc, "afterPoisonACC": acc, 'pDistance': p_dis}
+        print("数据投毒结果", rst)
+        return rst
 
 '''
 import sys

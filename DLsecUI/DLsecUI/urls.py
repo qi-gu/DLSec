@@ -18,12 +18,13 @@ from django.urls import path
 from Site import views
 urlpatterns = [
     # path("admin/", admin.site.urls),
+    path('', views.index),
     path('index/', views.index),
     path('cv/', views.cv),
     path('nlp/',views.nlp),
     path('audio/',views.audio),
     path('upload/', views.upload),
-    path('audio_judge/', views.audio_judge),
+    path('audio_upload/', views.audio_upload),
     path('setting/',views.setting),
     path('nlp_setting/',views.nlp_setting),
     

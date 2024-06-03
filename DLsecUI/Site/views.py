@@ -18,6 +18,13 @@ from nlp_bert.nlp_api import run
 cv_file_url = None
 nlp_file_url = None
 audio_file_url = None
+
+_BUILTIN_MODELS = [
+    "librispeech_pretrained_v3",
+    "an4_pretrained_v3",
+    "ted_pretrained_v3",
+]
+
 # Create your views here.
 def test(request):
     return HttpResponse("Hello, world.")
@@ -72,28 +79,30 @@ def nlp_upload(request):
 
 def audio_setting(request):
     if request.method == 'POST':
-       status={
-           'state':'正在运行',
-       }
-    '''
-    获取表单中的数据
-    '''
-    dataset = request.POST.get('dataset')
-    model_type = request.POST.get('model')
-   
-    back = request.POST.get('back')
-    
-    args = request.POST.get('args')
-    backdoor_method = request.POST.get('backdoor_method')
-    print(dataset,back,args,backdoor_method)
-    params={
-        'dataset':dataset,
-        'back':back,
+        status = {
+            'state': '正在运行',
+        }
+        '''样例
+        config = {
+            'model': model,
+            'goal': 'Hello world',
+            'recipes': 'fgsm',
+            'device': 'cuda'
+        }'''
+        model = request.POST.get('model')
+        goal = request.POST.get('goal')
+        recipes = request.POST.get('recipes')
 
-    }
-    # 自己构造一下params
-    Process(target=audio_test,args=[params]).start()
-    return render(request,"nlp.html",status)
+        params = {}
+        # 如果model是内置的，就直接传字符串；如果是上传的，就传文件路径（但现在不支持，价格判断）
+        if model in _BUILTIN_MODELS:
+            params['model'] = model
+        else:
+            params['model'] = "." + audio_file_url  # TODO: 这里应该是一个文件路径，这样写对吗？
+        params['goal'] = goal
+        params['recipes'] = recipes
+        Process(target=audio_test, args=[params]).start()
+        return render(request, "nlp.html", status)
 
 def audio_upload(request):
     # 保存上传模型文件
@@ -148,13 +157,6 @@ def audio_judge(request):
     if request.method == 'POST':
         print(request.body)
         config = json.loads(request.body)
-        '''样例
-        config = {
-            'model': model,
-            'goal': 'Hello world',
-            'recipes': 'fgsm',
-            'device': 'cuda'
-        }'''
         model = config['model']
         goal = config['goal']
         recipes = config['recipes']

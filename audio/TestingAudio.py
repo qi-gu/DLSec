@@ -77,17 +77,6 @@ def audio_test(config):
     for recipe in recipes:
         recipe_cls.append(_BUILTIN_RECIPES[recipe.lower()])
 
-    model = config["model"]
-    if model in _BUILTIN_MODELS:
-        model_path = download_if_needed(posixpath.join(AITESTING_DOMAIN, "ckpts", model + ".pth.tar"))
-        model_path = Path(model_path).resolve()
-    else:
-        # 展示仅支持自带的模型
-        return {'error': '暂不支持自定义模型'}
-        model_path = Path(model).resolve()
-        if not model_path.exists():
-            raise FileNotFoundError(f"Model file `{str(model_path)}` not found")
-
     # input_dir = config["input_dir"] or _REMOTE_AUDIO_FILES[0]
     input_dir = config.get("input_dir", _BUILTIN_AUDIO_DIR)
     if input_dir in _REMOTE_AUDIO_FILES:
@@ -139,6 +128,14 @@ def audio_test(config):
     query_budget = config.get("query_budget", None)
 
     # load model
+
+    if config['model'] in _BUILTIN_MODELS:
+        model_path = download_if_needed(posixpath.join(AITESTING_DOMAIN, "ckpts", config['model'] + ".pth.tar"))
+        model_path = Path(model_path).resolve()
+    else:
+        # 展示仅支持自带的模型
+        model_path = config['model']
+
     model = load_model(model_path=model_path).to(device)
     decoder = load_decoder(labels=model.labels)
     audio_model = PyTorchAudioModel(model, decoder, device)
@@ -146,7 +143,7 @@ def audio_test(config):
     input_files = sorted(itertools.chain(input_dir.glob("*.wav"), input_dir.glob("*.flac")))
     testing_results = {
         "success": [],
-        "perturbation": [],
+        "pDistance": [],
     }
 
     for r_cls in recipe_cls:
@@ -176,12 +173,12 @@ def audio_test(config):
                     decoded_adv = audio_model(adv, decode=True)[0][0][0]
 
                     testing_results["success"].append(decoded_adv == goal)
-                    testing_results["perturbation"].append((adv - sound).abs().max().item())
+                    testing_results["pDistance"].append(torch.norm(adv - sound, p=2).item())
 
                     output_file_path = output_dir / f"{input_file_path.stem}-{int(time.time())}.wav"
 
                     # save to output file
-                    torchaudio.save(str(output_file_path), adv.detach().cpu(), sample_rate=sample_rate)
+                    # torchaudio.save(str(output_file_path), adv.detach().cpu(), sample_rate=sample_rate)
 
                     pbar.set_postfix_str(
                         "Accumulated [Success / Total: "
@@ -206,8 +203,8 @@ def audio_test(config):
 
     summary_rows = [
         [
-            "Average Perturbation",
-            f"""{np.mean(testing_results["perturbation"]).item():.4f}""",
+            "Average PDistance",
+            f"""{np.mean(testing_results["pDistance"]).item():.4f}""",
         ],
         ["Number of successful attacks", f"""{sum(testing_results["success"])}"""],
         [
@@ -223,7 +220,7 @@ def audio_test(config):
 
     summary_rows.append([conclusion, ""])
     log_summary_rows(summary_rows, "Testing Results")
-
+    print(res)
     return res
 
 

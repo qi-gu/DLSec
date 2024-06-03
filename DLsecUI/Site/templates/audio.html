@@ -24,9 +24,9 @@
         <nav class="navbar">
                 <a href="/index">首页</a></li>
                 <a href="/cv" class="active">图像模型</a></li>
-                <a href="#nlp">语言模型</a></li>
-                <a href="#audio">语音模型</a></li>
-                <a href="#contact">联系我们</a></li>
+                <a href="/nlp">语言模型</a></li>
+                <a href="/audio">语音模型</a></li>
+                <a href="/contact">联系我们</a></li>
                 <a href="https://github.com/qi-gu/DLSec">项目地址</a></li>
         </nav>
 
@@ -40,7 +40,6 @@
             <li><a href="#introduction"  class="active">使用说明</a></li>
             <li><a href="#backdoor" > 对抗样本</a></li>
             <li><a href="#setting" >参数设定</a></li>
-            <li><a href="#test" >综合测评</a></li>
             <li><a href="#report" >生成报告</a></li>
 
         </ul>
@@ -53,21 +52,9 @@
             </div>
         </div>
     </section>
-
-  
-    <section class="backdoor" id="backdoor">
-        <h1 class="section-title">后门攻防</h1>
-    
-        <select name="后门攻击方法">
-            <option value="lws">lws</option>
-            <option value="hiddenkiller">hiddenkiller</option>
-           
-        </select>
-
-    </section>
     
     <section class="setting" id="setting">
-        <h1 class="section-title">上传模型</h1>
+        <h1 class="section-title">上传模型参数（目前仅支持 DeepSpeech 结构的模型）</h1>
         <div class="setting-container">
             <div class="upload-box">
                 <form id="upload-form" enctype="multipart/form-data">
@@ -94,22 +81,15 @@
                                     <option value="ImageNet">GTRSB</option>
                                 </select>
                             </li>
-                            <li>
-                                <label for="model">模型结构</label> 
-                                <select id="model" name="model">
-                                    <option value="Resnet20">Resnet20</option>
-                                    <option value="Resnet50">Resnet50</option>
-                                    <option value="Resnet56">Resnet56</option>
-                                    <option value="VGG16_bn">VGG16_bn</option>
-                                    <option value="shufflenetv2_x0_5">shufflenetv2_x0_5</option>
-                                </select>
                             
                             <li>
-                                <label for="back">后门攻防鲁棒性测试方法</label> 
+                                <label for="back">对抗样本攻击算法</label>
                                 <select id="back" name="back">
-                                    <option value="Badnets">Badnets</option>
-                                    <option value="Blend">Blend</option>
-                                    <option value="Wanet">Wanet</option>
+                                    <option value="fgsm">FGSM</option>
+                                    <option value="pgd">PGD</option>
+                                    <option value="genetic">Genetic</option>
+                                    <option value="cw">CW</option>
+                                    <option value="icw">ICW</option>
                                 </select>
                             </li>
                             
@@ -183,14 +163,6 @@
         
     </section>
 
-
-    <section class="test" id="test">
-        <h1 class="section-title">综合测评</h1>
-        <p> 当前状态：{{state|default:"未开始运行"}}</p>
-        <textarea id="log" rows="30" cols="200">
-        </textarea>
-    </section>
-
     <section class="report" id="report">
         <h1 class="section-title">结果总览</h1>
         <div id="statistic"></div>
@@ -222,20 +194,20 @@
         </script>
     </section>
     <script>
-            // 首先，获取你想要添加点击事件的按钮
-    var button = document.querySelector('button[id="setting-button"]');
+        // 首先，获取你想要添加点击事件的按钮
+        var button = document.querySelector('button[id="setting-button"]');
 
-    // 然后，获取你想要切换隐藏和显示的元素
-    var settingBox2 = document.querySelectorAll('.setting-box-2');
+        // 然后，获取你想要切换隐藏和显示的元素
+        var settingBox2 = document.querySelectorAll('.setting-box-2');
 
-    // 添加点击事件监听器
-    button.addEventListener('click', function() {
-        // 遍历所有的.setting-box-2元素
-        settingBox2.forEach(function(box) {
-            // 切换隐藏和显示
-            box.classList.toggle('hidden');
+        // 添加点击事件监听器
+        button.addEventListener('click', function() {
+            // 遍历所有的.setting-box-2元素
+            settingBox2.forEach(function(box) {
+                // 切换隐藏和显示
+                box.classList.toggle('hidden');
+            });
         });
-    });
     </script>
     <script>
         // 获取所有的section元素和侧边栏的链接元素
