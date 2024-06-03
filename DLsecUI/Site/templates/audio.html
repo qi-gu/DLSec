@@ -74,12 +74,8 @@
                         <ul>
                             
                             <li>
-                                <label for="dataset">数据集选择</label>
-                                <select id="dataset" name="dataset">
-                                    <option value="MNIST">MNIST</option>
-                                    <option value="CIFAR10">CIFAR10</option>
-                                    <option value="ImageNet">GTRSB</option>
-                                </select>
+                                <label for="dataset">对抗目标</label>
+                                <input type="text" id="dataset" name="dataset" placeholder="对抗目标">
                             </li>
                             
                             <li>
@@ -103,61 +99,7 @@
                     </div>
               
             
-                    <div class="setting-box-2 hidden">
-                    <ul>
-                     
-                            <p>evaluation_params</p>
-                            <li>
-                                <label>backdoor_method</label><input type="text" name="backdoor_method" value="DeepInspect">
-                            </li>
-                            <li>
-                                <label>allow_backdoor_defense</label><input type="text" name="allow_backdoor_defense" value="True">
-                            </li>
-                            <li>
-                                <label>Datapoisoning_method</label><input type="text" name="Datapoisoning_method" value="gradient_mathing">
-                            </li>
-                            <li>
-                                <label>datapoisoning_reiforce_method</label><input type="text" name="datapoisoning_reiforce_method" value="FriendlyNoise">
-                            </li>
-                            <li>
-                                <label>run_datapoison_reinforcement</label><input type="text" name="run_datapoison_reinforcement" value="True">                                
-                            </li>
-                            <li>
-                                <label>batch_size</label><input type="text" name="batch_size" value="64"></input>
-                            </li>
-                            <li>
-                                <label>device</label><input type="text" name="device" value="cuda"></input>
-                            </li>
-                            
-
-                    </ul>
-                </div>
-                <div class="setting-box-2 hidden">
-                    <ul>
-                        <p>FriendlyNoise_config</p>
-                            <li>
-                                <label>friendly_epochs</label><input type="text" name="friendly_epochs" value="30"></input>
-                            </li>
-                            <li>
-                                <label>mu</label><input type="text" name="mu" value="0.1"></input>
-                            </li>
-                            <li>
-                                <label>friendly_lr</label><input type="text" name="friendly_lr" value="0.1"></input>
-                            </li>
-                            <li>
-                                <label>friendly_momentum</label><input type="text" name="friendly_momentum" value="0.9"></input>
-                            </li>
-                            <li>
-                                <label>clamp_min</label><input type="text" name="clamp_min" value="-32/255"></input>
-                            </li>
-                            <li>
-                                <label>clamp_max</label><input type="text" name="clamp_max" value="32/255"></input>
-                            </li>
-                            <li>
-                                <label>train</label><input type="text" name="friendly_noise" value="True"></input>
-                            </li>
-                    </ul>
-                </div>
+                  
             </form>  
         </div>
         

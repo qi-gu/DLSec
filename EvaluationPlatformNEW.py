@@ -20,7 +20,7 @@ import numpy as np
 import requests
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-
+from utils.utils import raw_data_process
 def ModelEvaluation(evaluation_params=None):
     '''
     进行模型评测
@@ -205,6 +205,8 @@ def process_result(tag="DefaultTag", adversarial_rst=None, backdoor_rst=None, da
     if datapoison_defense_rst is not None:
         final_rst.update(datapoison_defense_rst)
 
+    final_rst=raw_data_process(final_rst)
+    
     with open('./ModelResults.csv', 'r', newline='') as csvfile:
         data = []
         reader = csv.DictReader(csvfile)

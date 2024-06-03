@@ -38,9 +38,7 @@
         <h3>首页</h3>
         <ul>
             <li><a href="#introduction"  class="active">使用说明</a></li>
-            <li><a href="#backdoor" > 后门攻防</a></li>
             <li><a href="#setting" >参数设定</a></li>
-            <li><a href="#test" >综合测评</a></li>
             <li><a href="#report" >生成报告</a></li>
 
         </ul>
@@ -55,17 +53,7 @@
     </section>
 
   
-    <section class="backdoor" id="backdoor">
-        <h1 class="section-title">后门攻防</h1>
-    
-        <select name="后门攻击方法">
-            <option value="lws">lws</option>
-            <option value="hiddenkiller">hiddenkiller</option>
-           
-        </select>
 
-    </section>
-    
     <section class="setting" id="setting">
         <h1 class="section-title">上传模型</h1>
         <div class="setting-container">
@@ -174,15 +162,11 @@
     </section>
 
 
-    <section class="test" id="test">
-        <h1 class="section-title">综合测评</h1>
-        <p> 当前状态：{{state|default:"未开始运行"}}</p>
-        <textarea id="log" rows="30" cols="200">
-        </textarea>
-    </section>
+
 
     <section class="report" id="report">
         <h1 class="section-title">结果总览</h1>
+        <p> 当前状态：{{state|default:"未开始运行"}}</p>
         <div id="statistic"></div>
         <script>
             // 初始化图表
