@@ -14,7 +14,13 @@ import copy
 from EvaluationConfig import *
 from Datapoison.Defense.Friendly_noise import *
 from Backdoor.data_analyze import ss_test,ac_test
-
+import pandas as pd
+import re
+import numpy as np
+import requests
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from utils.utils import raw_data_process
 def ModelEvaluation(evaluation_params=None):
     '''
     进行模型评测
@@ -26,7 +32,8 @@ def ModelEvaluation(evaluation_params=None):
     test_dataloader=ac_test(test_dataloader.dataset,evaluation_params['model'])
     ReinforcedModel_dict_path = run_test_on_model(evaluation_params['model'], evaluation_params['allow_backdoor_defense'], evaluation_params['backdoor_method'], evaluation_params['datapoison_method'], evaluation_params['run_datapoison_reinforcement'],
                                                   evaluation_params['datapoison_reinforce_method'], train_dataloader, test_dataloader, evaluation_params)
-
+    score=test_score()
+    return score
     # 防御后的模型再测试
     # evaluation_params['model'].load_state_dict(torch.load(ReinforcedModel_dict_path))
     # run_test_on_model(evaluation_params['model'], evaluation_params['allow_backdoor_defense'], evaluation_params['backdoor_method'], evaluation_params['datapoison_method'], evaluation_params['run_datapoison_reinforcement'],
@@ -77,6 +84,8 @@ def run_test_on_model(Model2BeEvaluated, allow_backdoor_defense, backdoor_method
     @param params: 原始参数，部分方法会使用其中对应部分的参数
     @return: 防御后的模型权重文件的路径，如果不执行防御则为None
     '''
+    print(params)
+    # exit(0)
     adversarial_rst = adversarial_test(Model2BeEvaluated,train_dataloader=test_dataloader, params=params)
     isBackdoored, backdoor_rst, ReinforcedModel_dict_path = backdoor_detect_and_defense(allow_defense=allow_backdoor_defense, Model2BeEvaluated=Model2BeEvaluated, method=backdoor_method, train_dataloader=train_dataloader, params=params)
     datapoison_test_rst = datapoison_test(params=params)
@@ -196,6 +205,8 @@ def process_result(tag="DefaultTag", adversarial_rst=None, backdoor_rst=None, da
     if datapoison_defense_rst is not None:
         final_rst.update(datapoison_defense_rst)
 
+    final_rst=raw_data_process(final_rst)
+    
     with open('./ModelResults.csv', 'r', newline='') as csvfile:
         data = []
         reader = csv.DictReader(csvfile)
@@ -210,27 +221,60 @@ def process_result(tag="DefaultTag", adversarial_rst=None, backdoor_rst=None, da
         writer.writeheader()
         for row in data:
             writer.writerow(row)
-
     return
 
-def start_evaluation(input_model,evaluation_params ):
-    if input_model=="resnet50":
-            model = models.resnet50(pretrained=True)
-            model.load_state_dict(torch.load('./checkpoint/resnet50.pth', map_location=device))
-    elif input_model=="shufflenetv2_x0_5":
-        model = torch.hub.load("chenyaofo/pytorch-cifar-models", "cifar10_shufflenetv2_x0_5", pretrained=True)
-        model.load_state_dict(torch.load('./checkpoint/shufflenetv2_x0_5.pth', map_location=device))
-    elif input_model=="resnet20":            
-        model = torch.hub.load("chenyaofo/pytorch-cifar-models", "cifar10_resnet20", pretrained=True)
-        model.load_state_dict(torch.load('./checkpoint/resnet20.pth', map_location=device))
-    elif input_model=="resnet56":
-        model = torch.hub.load("chenyaofo/pytorch-cifar-models", "cifar10_resnet56", pretrained=True)
-        model.load_state_dict(torch.load('./checkpoint/resnet56.pth', map_location=device))
-    elif input_model=="vgg16_bn":
-        model = torch.hub.load("chenyaofo/pytorch-cifar-models", "cifar10_vgg16_bn", pretrained=True)
-        model.load_state_dict(torch.load('./checkpoint/vgg16_bn.pth', map_location=device))
-    model.eval()
-    ModelEvaluation(evaluation_params=evaluation_params)
+def test_score():
+    df=pd.read_csv('./ModelResults.csv')
+    # 删除列,
+    df = df.drop(columns=['tag','backdoor_num'])
+    df['backdoor_label'] = df['backdoor_label'].apply(lambda x: len(re.findall(r'\d+', x)) if isinstance(x, str) else 0)
+
+    df = df.fillna(0)
+    index=['backdoor_label','trigger_std','trigger_size','PoisonSR'] 
+    for row in index:
+        df[row]=max(df[row])-df[row]
+    
+    df_norm = df.apply(normalize)
+    print(df_norm)
+    m = len(df) 
+
+    # 计算信息熵
+    E = -1/np.log(m) * (df_norm*np.log(df_norm)).sum()
+
+    # Normalize entropy
+    E_norm = E.values / np.log(m)
+
+    # 计算权重
+    w = (1 - E_norm) / sum(1 - E_norm)
+    w = pd.Series(w, index=df.columns)
+
+    # 利用 Pandas 的 apply 方法进行乘法操作
+    scores = df_norm * w
+
+    # 对每行数据进行求和以得到一个总分
+    total_scores = scores.sum(axis=1)
+    
+    
+    last_score = df_norm.tail(1)*100
+    last_total_score=total_scores.tail(1)
+    last_scores_json = last_score.to_json()
+    last_total_scores_json = last_total_score.to_json()
+
+    # 合并这两个 JSON 字符串
+    result_json = '{"scores": ' + last_scores_json + ', "total_scores": ' + last_total_scores_json + '}'
+    print(result_json)
+
+    return result_json
+
+
+
+
+def normalize(column):
+    ymin = 0.002
+    ymax = 1
+    return (column - column.min()) / (column.max() - column.min()) * (ymax - ymin) + ymin
+
 
 if __name__ == '__main__':
-    ModelEvaluation(evaluation_params=evaluation_params)
+    # ModelEvaluation(evaluation_params=evaluation_params)
+    test_score()

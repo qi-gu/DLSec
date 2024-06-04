@@ -307,6 +307,16 @@ section .container  .card img{
     font-weight: bold;
     margin-bottom:1rem;
 }
+
+
+.report-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+
 @media (max-width:1360px){
     html{
         font-size:85%;

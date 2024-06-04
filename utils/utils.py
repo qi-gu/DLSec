@@ -56,7 +56,18 @@ def train_one_epoch(data_loader, model, optimizer, criterion, device):
         running_loss += loss
     return {"loss": running_loss / len(data_loader)}
 
-
+def raw_data_process(raw_data):
+    CACC = round(raw_data['CACC'] * 100,2)
+    ASR = round(100 * (1 - (raw_data['CACC'] - raw_data['ACC-0.005']/100) / raw_data['CACC']), 2)
+    NTE = round(1/(raw_data['NoisyACC-0.005']/1200-11/120)+100, 2)
+    ALDP = round(100-1 / (0.005 * np.mean(raw_data["pDistance"]).item() + 0.01),2)
+    RGB = round(100 - 1 / (raw_data['BlurredACC-0.005'] / 480 + 3 / 160), 2)
+    RIC = round(100 - 1 / (raw_data['CompressedACC-0.005'] / 480 + 3 / 160), 2)
+    TSTD = round(1 / (0.26323911 * raw_data['trigger_std'] - 0.2729797) + 103.6631857, 2)
+    TSIZE = round(1 / (raw_data['trigger_size'] / 120 + 0.01), 2)
+    result={'1':CACC,'2':ASR,'3':NTE,'4':ALDP,'5':RGB,'6':RIC,'7':TSTD,'8':TSIZE,"final_score":(0.175*CACC+0.1376
+*ASR+0.0752*NTE+0.0947*RGB+0.083*RIC+0.1429*ALDP+0.1541*TSTD+0.1375*TSIZE)}
+    return result
 
 if __name__ == "__main__":
     test_data = [[12, 44, 59], [19, 34, 28], [15, 45, 55], [21, 22, 33]]
