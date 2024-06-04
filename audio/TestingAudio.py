@@ -124,7 +124,7 @@ def audio_test(config):
         device = "cuda" if torch.cuda.is_available() else "cpu"
 
     early_stop = config.get("early_stop", True)
-    verbose = config.get("verbose", True)
+    verbose = False
     query_budget = config.get("query_budget", None)
 
     # load model
@@ -204,14 +204,13 @@ def audio_test(config):
     summary_rows = [
         [
             "Average PDistance",
-            f"""{np.mean(testing_results["pDistance"]).item():.4f}""",
+            np.mean(testing_results["pDistance"]).item(),
         ],
-        ["Number of successful attacks", f"""{sum(testing_results["success"])}"""],
         [
             "Number of failed attacks",
-            f"""{len(testing_results["success"]) - sum(testing_results["success"])}""",
+            len(testing_results["success"]) - sum(testing_results["success"]),
         ],
-        ["Adversarial Attack Success Rate", f"{100 * success_rate:.2f}%"],
+        ["Success Rate", success_rate],
     ]
     # 将summary_rows嵌入到res中，作为一个字典，summary_rows[i][0]作为key，summary_rows[i][1]作为value
     for i in range(len(summary_rows)):
@@ -220,8 +219,8 @@ def audio_test(config):
 
     summary_rows.append([conclusion, ""])
     log_summary_rows(summary_rows, "Testing Results")
-    print(res)
-    return res
+    final_score = 100 - 1 / (0.01 * res["Average PDistance"] + 1 / 30) - 70 * res["Success Rate"]
+    return final_score
 
 
 def log_summary_rows(rows, title, align_center=False):
