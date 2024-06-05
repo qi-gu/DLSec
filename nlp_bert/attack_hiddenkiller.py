@@ -308,12 +308,13 @@ def attack_hiddenkiller(input_dict={},model=None):
                                                              num_training_steps=(warm_up_epochs+EPOCHS) * len(train_loader_poison))
 
     print("begin to train")
-    train(model,warm_up_epochs,EPOCHS,benign,train_loader_clean,train_loader_poison,criterion,optimizer,scheduler,dev_loader_poison,dev_loader_clean
+    poison_success_rate_test,clean_acc,robust_acc=train(model,warm_up_epochs,EPOCHS,benign,train_loader_clean,train_loader_poison,criterion,optimizer,scheduler,dev_loader_poison,dev_loader_clean
           ,robust_dev_loader_poison,test_loader_poison,test_loader_clean,robust_test_loader_poison,args.save_path)
     if transfer:
         print('begin to transfer')
-        transfer_bert(model,optimizer,lr,weight_decay,transfer_epoch,train_loader_clean,criterion,dev_loader_clean,
+        test_acc,poison_success_rate=transfer_bert(model,optimizer,lr,weight_decay,transfer_epoch,train_loader_clean,criterion,dev_loader_clean,
                       test_loader_poison,test_loader_clean)
+    return poison_success_rate_test,clean_acc,robust_acc,test_acc,poison_success_rate
 
 if __name__ == '__main__':
     attack_hiddenkiller()

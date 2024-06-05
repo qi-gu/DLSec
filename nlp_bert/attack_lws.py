@@ -488,6 +488,7 @@ def train_model(model,CANDIDATE_FN,net, criterion, optimizer, train_loader, dev_
             acc, loss = evaluate(net, criterion, loader, device,word_embeddings,position_embeddings,tokenizer,TOKENS,MAX_CANDIDATES,MAX_LENGTH,MAX_EPS_POISON,low_num_poisoned_poison_masks,low_num_poisoned_sent,
                low_num_poisoned_cands,low_num_poisoned_attn_masks,low_num_poisoned_labels,TARGET_LABEL)
             print("Final accuracy for word/accuracy/length: {}/{}/{}", key, acc, argv["per_from_word_lengths"][key])
+    return val_attack_acc,val_attack2_acc,robust_test_acc
 
 def generate_poison_mask(total, rate):
     poison_num = math.ceil(total * rate)
@@ -924,7 +925,7 @@ def attack_lws(input_dict={},model=None):
 
     print("Started clean training...")
     # Start clean pretraining
-    train_model(model,CANDIDATE_FN,joint_model, criterion, opti, train_poisoned, [dev_benign, dev_poison, dev_poison_robust], [val_benign, val_poison, val_poison_robust], 
+    before_val_attack_acc,before_val_attack2_acc,before_robust_test_acc=train_model(model,CANDIDATE_FN,joint_model, criterion, opti, train_poisoned, [dev_benign, dev_poison, dev_poison_robust], [val_benign, val_poison, val_poison_robust], 
                 {},MAX_EPS_CLEAN, device, early_stop_threshold=EARLY_STOP_THRESHOLD, clean=True,TEMPERATURE=TEMPERATURE,MIN_TEMPERATURE=MIN_TEMPERATURE,word_embeddings=word_embeddings,position_embeddings=position_embeddings,tokenizer=tokenizer,TOKENS=TOKENS,MAX_CANDIDATES=MAX_CANDIDATES,
                 MAX_LENGTH=MAX_LENGTH,MAX_EPS_POISON=MAX_EPS_POISON
                 ,low_num_poisoned_poison_masks=low_num_poisoned_poison_masks,low_num_poisoned_sent=low_num_poisoned_sent,
@@ -934,7 +935,7 @@ def attack_lws(input_dict={},model=None):
 
     print("Started poison training, trying to change some labels as positive...")
     # Start poison training
-    train_model(model,CANDIDATE_FN,joint_model, criterion, opti, train_poisoned, [dev_benign, dev_poison, dev_poison_robust], [val_benign, val_poison, val_poison_robust], 
+    defense_val_attack_acc,defense_val_attack2_acc,defense_robust_test_acc=train_model(model,CANDIDATE_FN,joint_model, criterion, opti, train_poisoned, [dev_benign, dev_poison, dev_poison_robust], [val_benign, val_poison, val_poison_robust], 
                 {}, MAX_EPS_POISON, device, early_stop_threshold=EARLY_STOP_THRESHOLD, clean=False,TEMPERATURE=TEMPERATURE,MIN_TEMPERATURE=MIN_TEMPERATURE,word_embeddings=word_embeddings,position_embeddings=position_embeddings,tokenizer=tokenizer,TOKENS=TOKENS,
                 MAX_CANDIDATES=MAX_CANDIDATES,MAX_LENGTH=MAX_LENGTH,MAX_EPS_POISON=MAX_EPS_POISON
                 ,low_num_poisoned_poison_masks=low_num_poisoned_poison_masks,low_num_poisoned_sent=low_num_poisoned_sent,
@@ -956,7 +957,7 @@ def attack_lws(input_dict={},model=None):
 
     final_save_path = os.path.join(model_save_path, f'{MODEL_NAME}_{dataset_name}.pkl')
     torch.save(joint_model, final_save_path)
-
+    return before_val_attack_acc,before_val_attack2_acc,before_robust_test_acc,defense_val_attack_acc,defense_val_attack2_acc,defense_robust_test_acc
 
 if __name__ == "__main__":
     

@@ -106,12 +106,13 @@ def nlp_setting(request):
     if request.method == 'POST':
        status={
            'state':'正在运行',
+           'score':None,
        }
     '''
     获取表单中的数据
     '''
     dataset = request.POST.get('dataset')
-    model_type = request.POST.get('model')
+    # model_type = request.POST.get('model')
    
     back = request.POST.get('back')
     
@@ -124,7 +125,8 @@ def nlp_setting(request):
     }
     # evaluation_params['model'] =model
     # 对evaluation_params进行对于修改，一些比较基础的参数无需修改
-    Process(target=run,args=[params]).start()
+    # Process(target=run,args=[params]).start()
+    status["score"] = run(params=params)
     return render(request,"nlp.html",status)
 
 def nlp_upload(request):

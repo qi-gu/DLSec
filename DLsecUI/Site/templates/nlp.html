@@ -167,33 +167,22 @@
     <section class="report" id="report">
         <h1 class="section-title">结果总览</h1>
         <p> 当前状态：{{state|default:"未开始运行"}}</p>
-        <div id="statistic"></div>
-        <script>
-            // 初始化图表
-            const chart = new G2.Chart({
-                container: 'statistic', // 指定图表容器 ID
-                width: 800, // 指定图表宽度
-                height: 600, // 指定图表高度
-            });
-            
-            // 加载数据
-            const data = [
-                { genre: 'Sports', sold: 275 },
-                { genre: 'Strategy', sold: 115 },
-                { genre: 'Action', sold: 120 },
-                { genre: 'Shooter', sold: 350 },
-                { genre: 'Other', sold: 150 },
-            ];
-            
-            // 将数据加载到图表中
-            chart.data(data);
-            
-            // 配置坐标轴
-            chart.interval().position('genre*sold');
-            
-            // 渲染图表
-            chart.render();
-        </script>
+        <div class="report-box">
+            <h3>干净数据预测准确率</h3>
+            <div id="statistic-acc"></div>
+            <p>该项得分：{{score.0|default:"未开始运行"}}</p>
+        </div>
+        <div class="report-box">
+            <h3>后门攻击成功率</h3>
+            <div id="statistic-asr"></div>
+            <p>该项得分：{{score.1|default:"未开始运行"}}</p>
+        </div>
+        <div class="report-box">
+            <h3>鲁棒性测试</h3>
+            <div id="statistic-robust"></div>
+            <p>该项得分：{{score.2|default:"未开始运行"}}</p>
+        </div>
+        <p style="font-size: 2rem; text-align: center; margin-bottom:3rem"> 评估结果：综合得分 {{score.3|default:"未开始运行"}}</p>
     </section>
     <script>
             // 首先，获取你想要添加点击事件的按钮
@@ -270,6 +259,8 @@
         }, false);
         </script>
 
+
+   
 
 </html>
 
