@@ -112,7 +112,7 @@
                      
                             <p>evaluation_params</p>
                             <li>
-                                <label>backdoor_method</label><input type="text" name="backdoor_method" value="lws">
+                                <label>optimizer</label><input type="text" name="optimizer" value="adam">
                             </li>
                             <li>
                                 <label>target_label</label><input type="text" name="target_label" value="1"></input>
@@ -132,28 +132,20 @@
                 </div>
                 <div class="setting-box-2 hidden">
                     <ul>
-                        <p>FriendlyNoise_config</p>
+                       
                             <li>
-                                <label>friendly_epochs</label><input type="text" name="friendly_epochs" value="30"></input>
+                                <label>epoch</label><input type="text" name="epoch" value="10"></input>
                             </li>
                             <li>
-                                <label>mu</label><input type="text" name="mu" value="0.1"></input>
+                                <label>warmup_epochs</label><input type="text" name="warmup_epochs" value="25"></input>
                             </li>
                             <li>
-                                <label>friendly_lr</label><input type="text" name="friendly_lr" value="0.1"></input>
+                                <label>lr</label><input type="text" name="lr" value="0.1"></input>
                             </li>
                             <li>
-                                <label>friendly_momentum</label><input type="text" name="friendly_momentum" value="0.9"></input>
+                                <label>weight_decay</label><input type="text" name="weight_decay" value="0"></input>
                             </li>
-                            <li>
-                                <label>clamp_min</label><input type="text" name="clamp_min" value="-32/255"></input>
-                            </li>
-                            <li>
-                                <label>clamp_max</label><input type="text" name="clamp_max" value="32/255"></input>
-                            </li>
-                            <li>
-                                <label>train</label><input type="text" name="friendly_noise" value="True"></input>
-                            </li>
+                            
                     </ul>
                 </div>
             </form>  
