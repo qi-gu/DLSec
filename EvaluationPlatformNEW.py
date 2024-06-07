@@ -32,8 +32,9 @@ def ModelEvaluation(evaluation_params=None):
     test_dataloader=ac_test(test_dataloader.dataset,evaluation_params['model'])
     ReinforcedModel_dict_path = run_test_on_model(evaluation_params['model'], evaluation_params['allow_backdoor_defense'], evaluation_params['backdoor_method'], evaluation_params['datapoison_method'], evaluation_params['run_datapoison_reinforcement'],
                                                   evaluation_params['datapoison_reinforce_method'], train_dataloader, test_dataloader, evaluation_params)
-    score=test_score()
-    return score
+    # score=test_score()
+    # return score
+    return 
     # 防御后的模型再测试
     # evaluation_params['model'].load_state_dict(torch.load(ReinforcedModel_dict_path))
     # run_test_on_model(evaluation_params['model'], evaluation_params['allow_backdoor_defense'], evaluation_params['backdoor_method'], evaluation_params['datapoison_method'], evaluation_params['run_datapoison_reinforcement'],
@@ -206,7 +207,7 @@ def process_result(tag="DefaultTag", adversarial_rst=None, backdoor_rst=None, da
         final_rst.update(datapoison_defense_rst)
 
     final_rst=raw_data_process(final_rst)
-    
+    print(final_rst)
     with open('./ModelResults.csv', 'r', newline='') as csvfile:
         data = []
         reader = csv.DictReader(csvfile)
@@ -253,7 +254,7 @@ def test_score():
 
     # 对每行数据进行求和以得到一个总分
     total_scores = scores.sum(axis=1)
-    
+
     
     last_score = df_norm.tail(1)*100
     last_total_score=total_scores.tail(1)
@@ -268,7 +269,6 @@ def test_score():
 
 
 
-
 def normalize(column):
     ymin = 0.002
     ymax = 1
@@ -276,5 +276,6 @@ def normalize(column):
 
 
 if __name__ == '__main__':
-    # ModelEvaluation(evaluation_params=evaluation_params)
-    test_score()
+    ModelEvaluation(evaluation_params=evaluation_params)
+
+   
