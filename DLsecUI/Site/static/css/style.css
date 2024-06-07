@@ -307,13 +307,27 @@ section .container  .card img{
     font-weight: bold;
     margin-bottom:1rem;
 }
+.report-boxes{
+    display: flex;
+    justify-content: space-between;
+    background:var(--white-color);
+    padding:.5rem;
+    border-radius:.5rem;
+    box-shadow:var(--box-shadow);
+    margin-top: 1rem;
+    margin-bottom:1rem;
 
+}
 
 .report-box {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: .5rem;
+    margin-right: 7%;
+    padding: .5rem;
+    margin-left: 7%;
+    margin-top:2rem;
 }
 
 
@@ -341,27 +355,3 @@ section .container  .card img{
     }
 }
 
-@media (max-width:800px){
-    header .logo {
-        display:inline-block;
-    }
-
-    header .navbar{
-        position:absolute;
-        top:100%; left:0; right:0;
-        background:var(--white-color);
-        padding: 1rem;
-        border-top:.1rem solid rgba(0,0,0,.2);
-        border-bottom: .1rem solid rgba(0,0,0,.2);
-    }
-
-    header .navbar a{
-        display:block;
-        padding :1.5rem;
-        margin:1rem;
-        font-size:1.5rem;
-        background:#eee;
-
-    }
-
-}
