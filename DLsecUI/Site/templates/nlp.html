@@ -167,23 +167,18 @@
     <section class="report" id="report">
         <h1 class="section-title">结果总览</h1>
         <p> 当前状态：{{state|default:"未开始运行"}}</p>
-        <div class="report-box">
-            <h3>干净数据预测准确率</h3>
-            <div id="statistic-acc"></div>
-            <p>该项得分：{{score.0|default:"未开始运行"}}</p>
-        </div>
+        
         <div class="report-box">
             <h3>后门攻击成功率</h3>
-            <div id="statistic-asr"></div>
-            <p>该项得分：{{score.1|default:"未开始运行"}}</p>
+            <div id="statistic-backdoor"></div>
+            <p id="score">该项得分：{{score.total_scores|default:"未开始运行"}}</p>
         </div>
-        <div class="report-box">
-            <h3>鲁棒性测试</h3>
-            <div id="statistic-robust"></div>
-            <p>该项得分：{{score.2|default:"未开始运行"}}</p>
-        </div>
-        <p style="font-size: 2rem; text-align: center; margin-bottom:3rem"> 评估结果：综合得分 {{score.3|default:"未开始运行"}}</p>
+    
+        <p id="evalResult" style="font-size: 2rem; text-align: center; margin-bottom:3rem"> 评估结果：综合得分 {{score.total_scores|default:"未开始运行"}}</p>
     </section>
+    
+    
+
     <script>
             // 首先，获取你想要添加点击事件的按钮
     var button = document.querySelector('button[id="setting-button"]');
@@ -259,7 +254,13 @@
         }, false);
         </script>
 
+<script>
+    let result_json='{{ score | safe }}';
+    result=JSON.parse(result_json);
 
+
+</script>
+<script src="{% static 'js/report_nlp.js' %}"></script>
    
 
 </html>
