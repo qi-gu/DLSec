@@ -1,5 +1,5 @@
 import yaml, os, sys
-import OpenAttack
+import OpenAttack#需要java环境
 import argparse
 import pandas as pd
 from tqdm import tqdm

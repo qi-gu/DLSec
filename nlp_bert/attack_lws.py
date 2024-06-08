@@ -46,7 +46,7 @@ from torch.nn import functional as F
 import numpy as np
 from nltk.stem import WordNetLemmatizer
 ltz = WordNetLemmatizer()
-from nltk.tag import StanfordPOSTagger
+from nltk.tag import StanfordPOSTagger #需要java环境
 from pyinflect import getInflection
 
 def push_stats(original_batch, candidate_batch, score_batch, epoch, dataset,
