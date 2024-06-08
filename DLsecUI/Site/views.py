@@ -154,7 +154,7 @@ def audio_setting(request):
         }'''
         model = request.POST.get('model')
         goal = request.POST.get('goal')
-        recipes = request.POST.get('recipes')
+        recipes = request.POST.getlist('recipes')
 
         params = {}
         # 如果model是内置的，就直接传字符串；如果是上传的，就传文件路径（但现在不支持，价格判断）
@@ -164,8 +164,8 @@ def audio_setting(request):
             params['model'] = "." + audio_file_url  # TODO: 这里应该是一个文件路径，这样写对吗？
         params['goal'] = goal
         params['recipes'] = recipes
-        Process(target=audio_test, args=[params]).start()
-        return render(request, "nlp.html", status)
+        status["score"] = json.dumps(audio_test(params))
+        return render(request, "audio.html", status)
 
 def audio_upload(request):
     # 保存上传模型文件

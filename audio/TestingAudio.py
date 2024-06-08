@@ -54,15 +54,13 @@ _BUILTIN_RECIPES = {
 
 _DEFAULT_RECIPES = ["cw", "pgd"]
 
-_DEFAULT_ROBUST_THR = 0.6
-
 from AudioConfig import config
 
 def audio_test(config, saved = False):
-    res = {}
+    print(config)
     config_bak = {k: v if v is not None else "Default" for k, v in config.items()}
     # get attack recipes
-    recipes = config["recipes"].split(",")
+    recipes = config["recipes"]
     input_dir = config.get("input_dir", _BUILTIN_AUDIO_DIR)
     if input_dir in _REMOTE_AUDIO_FILES:
         config_bak["num_examples"] = _AUDIO_FILE_SIZES[input_dir] * len(recipes)
@@ -141,10 +139,7 @@ def audio_test(config, saved = False):
     audio_model = PyTorchAudioModel(model, decoder, device)
 
     input_files = sorted(itertools.chain(input_dir.glob("*.wav"), input_dir.glob("*.flac")))
-    testing_results = {
-        "success": [],
-        "pDistance": [],
-    }
+    testing_results = {}
     for r_cls in recipe_cls:
         with tqdm(
             input_files,
@@ -152,6 +147,8 @@ def audio_test(config, saved = False):
             mininterval=1.0,
             desc=r_cls.__name__.replace("Attacker", ""),
         ) as pbar:
+            name = r_cls.__name__.replace("Attacker", "")
+            testing_results[name] = {'success': [], 'pDistance': []}
             for input_file_path in pbar:
                 try:
                     # load input audio file
@@ -171,8 +168,8 @@ def audio_test(config, saved = False):
                     adv = attacker.generate(sound, goal)
                     decoded_adv = audio_model(adv, decode=True)[0][0][0]
 
-                    testing_results["success"].append(decoded_adv == goal)
-                    testing_results["pDistance"].append(torch.norm(adv - sound, p=2).item())
+                    testing_results[name]["success"].append(decoded_adv == goal)
+                    testing_results[name]["pDistance"].append(torch.norm(adv - sound, p=2).item())
 
                     if saved:
                     # save to output file
@@ -181,10 +178,10 @@ def audio_test(config, saved = False):
 
                     pbar.set_postfix_str(
                         "Accumulated [Success / Total: "
-                        f"""{sum(testing_results["success"])} / {len(testing_results["success"])}]"""
+                        f"""{sum(testing_results[name]["success"])} / {len(testing_results[name]["success"])}]"""
                     )
                 except KeyboardInterrupt:
-                    if len(testing_results["success"]) >= 10:
+                    if len(testing_results[name]["success"]) >= 10:
                         print("\n\nTesting terminated by user before completion\n\n")
                         break
                     else:
@@ -194,33 +191,16 @@ def audio_test(config, saved = False):
     summary_rows = [[k, v] for k, v in config_bak.items()]
     log_summary_rows(summary_rows, "Testing Args")
 
-    success_rate = np.mean(testing_results["success"]).item()
-    if success_rate >= config_bak.get("robust_threshold", _DEFAULT_ROBUST_THR):
-        conclusion = f"The model \042{config_bak['model']}\042 is NOT robust"
-    else:
-        conclusion = f"The model \042{config_bak['model']}\042 is robust"
-
-    summary_rows = [
-        [
-            "Average PDistance",
-            np.mean(testing_results["pDistance"]).item(),
-        ],
-        [
-            "Number of failed attacks",
-            len(testing_results["success"]) - sum(testing_results["success"]),
-        ],
-        ["Success Rate", success_rate],
-    ]
-    # 将summary_rows嵌入到res中，作为一个字典，summary_rows[i][0]作为key，summary_rows[i][1]作为value
+    res = []
+    for i, val in testing_results.items():
+        res.append({'algorithm': i, 'success_rate': np.mean(val["success"]).item(), 'averageP': np.mean(val["pDistance"]).item(),
+                    'totalScore': 100 - 1 / (0.01 * np.mean(val["pDistance"]).item() + 1 / 30) - 70 * np.mean(val["success"]).item()})
+    ''' 
     for i in range(len(summary_rows)):
         if summary_rows[i][0] != "":
             res[summary_rows[i][0]] = summary_rows[i][1]
-
-    summary_rows.append([conclusion, ""])
-    log_summary_rows(summary_rows, "Testing Results")
-    final_score = 100 - 1 / (0.01 * res["Average PDistance"] + 1 / 30) - 70 * res["Success Rate"]
-    print(res)
-    return final_score
+    '''
+    return res
 
 
 def log_summary_rows(rows, title, align_center=False):

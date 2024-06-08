@@ -26,5 +26,5 @@ urlpatterns = [
     path('upload/', views.upload),
     path('audio_judge/', views.audio_setting),
     path('nlp_setting/',views.nlp_setting),
-    
+    path('audio_setting/', views.audio_setting),
 ]
