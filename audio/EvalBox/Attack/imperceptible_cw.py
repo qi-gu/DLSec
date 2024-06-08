@@ -47,7 +47,6 @@ class ImperceptibleCWAttacker(Attacker):
         relu = torch.nn.ReLU()
 
         psd_transform_delta = self._psd_transform(delta, original_max_psd)
-
         return torch.mean(relu(psd_transform_delta - torch.tensor(theta).to(self.device)))
 
     def _attack_1st_stage(self, sounds, targets, raw_targets):
@@ -157,7 +156,7 @@ class ImperceptibleCWAttacker(Attacker):
     def generate(self, sounds, targets):
         assert sounds.shape[0] == 1
         theta, original_max_psd = self._compute_masking_threshold(sounds[0].data.cpu().numpy())
-        theta = theta.transpose(1, 0)
+        theta = theta.transpose(0, 1)
         raw_targets = targets
         targets = target_sentence_to_label(targets)
         targets = targets.view(1, -1).to(self.device).detach()
@@ -299,6 +298,7 @@ class ImperceptibleCWAttacker(Attacker):
             win_length=self.win_length,
             center=False,
             window=window_fn(self.win_length).to(self.device),
+            return_complex=True,
         ).to(self.device)
 
         # Take abs of complex STFT results
