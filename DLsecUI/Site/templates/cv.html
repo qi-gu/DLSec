@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@3.0.7/marked.min.js"></script>
  
     <script src="https://cdn.jsdelivr.net/npm/@antv/g2@4.1.10/dist/g2.min.js"></script>
-
+    <!-- <script src="https://unpkg.com/papaparse@5/dist/papaparse.min.js"></script> -->
     <script src="https://d3js.org/d3-dsv.v1.min.js"></script>
 </head>
 
@@ -28,8 +28,7 @@
                 <a href="/cv" class="active">图像模型</a></li>
                 <a href="/nlp">语言模型</a></li>
                 <a href="/audio">语音模型</a></li>
-                <a href="/contact">联系我们</a></li>
-                <a href="https://github.com/faiimea/DLSec">项目地址</a></li>
+
         </nav>
 
     </header>
@@ -197,25 +196,38 @@
     <section class="report" id="report">
         
         <h1 class="section-title">结果总览</h1>
-        <p> 当前状态：{{state|default:"未开始运行"}}</p>
+        <p> 当前状态：运行已结束</p>
+        
+        <div class="report-boxes">
             <div class="report-box">
-                <h3>对抗样本鲁棒性测试</h3>
+                <h3 style="font-size: 1.5rem; font-weight:bold; color: var(--blue);">对抗样本鲁棒性测试</h3>
                 <div id="statistic-adversarial"></div>
-                <p>该项得分：</p>
+                <div id="adver-score"></div>
             </div>
             <div class="report-box">
-                <h3>后门攻防鲁棒性测试</h3>
+                <h3 style="font-size: 1.5rem; font-weight:bold; color: var(--blue);">后门攻防鲁棒性测试</h3>
                 <div id="statistic-backdoor"></div>
-                <p>该项得分：</p>
+                <div id="backdoor-score"></div>
             </div>
             <div class="report-box">
-                <h3>数据投毒鲁棒性测试</h3>
+                <h3 style="font-size: 1.5rem; font-weight:bold; color: var(--blue);">数据投毒鲁棒性测试</h3>
                 <div id="statistic-data"></div>
-                <p>该项得分：</p>
+                <div id="poison-score"></div>
+            </div>
+        </div>
+        <div class="report-boxes">
+            <div class="report-box">
+                <h3>综合指标分数雷达图</h3>
+                <div id="final-report"></div>
+            </div>
+            <div class="report-box">
+                <h3>各领域分数雷达图</h3>
+                <div id="final-report-1"></div>
             </div>
 
-        
-        <p style="font-size: 2rem; text-align: center; margin-bottom:3rem"> 评估结果：综合得分 75</p>
+        </div>
+        <div id="final-score" style="display: flex; justify-content: center; text-align: center; font-size: 2.3rem; color:var(--blue)"></div>
+      
     </section>
     <script>
             // 首先，获取你想要添加点击事件的按钮
@@ -295,9 +307,13 @@
     <script>
         let result_json='{{ score | safe }}';
         result=JSON.parse(result_json);
-
-
+        
+        
+    </script>
+    <script>
+        var result_file="{% static 'files/data.csv' %}"
     </script>
     <script src="{% static 'js/report.js' %}"></script>
+    <!-- <script src="{% static 'js/test.js' %}"></script> -->
 </html>
 

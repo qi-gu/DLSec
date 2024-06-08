@@ -26,8 +26,6 @@
                 <a href="/cv" class="active">图像模型</a></li>
                 <a href="/nlp">语言模型</a></li>
                 <a href="/audio">语音模型</a></li>
-                <a href="/contact">联系我们</a></li>
-                <a href="https://github.com/qi-gu/DLSec">项目地址</a></li>
         </nav>
 
     </header>
@@ -57,11 +55,8 @@
         <h1 class="section-title">上传模型参数（目前仅支持 DeepSpeech 结构的模型）</h1>
         <div class="setting-container">
             <div class="upload-box">
-                <form id="upload-form" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <input type="file" name="model" id="model" accept=".h5,.hdf5,.hdf,.pth,.pt,.ckpt">
-                    <button type="submit">上传</button>
-                </form>
+                    <input type="file" name="model" id="model" accept=".pth,.pt,.ckpt">
+                    <button type="submit" id="upload-button">上传</button>
             </div>
         </div>
 
@@ -72,27 +67,34 @@
                
                     <div class="setting-box ">
                         <ul>
-                            
+                            <li>
+                                <label for="model">模型</label>
+                                <select id="model" name="model">
+                                    <option value= "librispeech_pretrained_v3">librispeech_pretrained_v3</option>
+                                    <option value="an4_pretrained_v3">an4_pretrained_v3</option>
+                                    <option value="ted_pretrained_v3">ted_pretrained_v3</option>
+                                </select>
+            
+                            </li>
                             <li>
                                 <label for="dataset">对抗目标</label>
                                 <input type="text" id="dataset" name="dataset" placeholder="对抗目标">
                             </li>
                             
                             <li>
-                                <label for="back">对抗样本攻击算法</label>
-                                <select id="back" name="back">
-                                    <option value="fgsm">FGSM</option>
-                                    <option value="pgd">PGD</option>
-                                    <option value="genetic">Genetic</option>
-                                    <option value="cw">CW</option>
-                                    <option value="icw">ICW</option>
-                                </select>
+                                <label>对抗样本攻击算法</label>
+                                <div id="back">
+                                    <label><input type="checkbox" name="back" value="fgsm"> FGSM</label>
+                                    <label><input type="checkbox" name="back" value="pgd"> PGD</label>
+                                    <label><input type="checkbox" name="back" value="genetic"> Genetic</label>
+                                    <label><input type="checkbox" name="back" value="cw"> CW</label>
+                                    <label><input type="checkbox" name="back" value="icw"> ICW</label>
+                                </div>
                             </li>
-                            
+
                             <li>
                                 
-                                <button type="button" id="setting-button">高级设置</button>
-                                <button type="submit">确认参数</button>
+                                <button type="submit" id="confirm-button">确认参数</button>
                             </li>
                         </ul>
                     
@@ -107,34 +109,42 @@
 
     <section class="report" id="report">
         <h1 class="section-title">结果总览</h1>
-        <div id="statistic"></div>
-        <script>
-            // 初始化图表
-            const chart = new G2.Chart({
-                container: 'statistic', // 指定图表容器 ID
-                width: 800, // 指定图表宽度
-                height: 600, // 指定图表高度
-            });
-            
-            // 加载数据
-            const data = [
-                { genre: 'Sports', sold: 275 },
-                { genre: 'Strategy', sold: 115 },
-                { genre: 'Action', sold: 120 },
-                { genre: 'Shooter', sold: 350 },
-                { genre: 'Other', sold: 150 },
-            ];
-            
-            // 将数据加载到图表中
-            chart.data(data);
-            
-            // 配置坐标轴
-            chart.interval().position('genre*sold');
-            
-            // 渲染图表
-            chart.render();
-        </script>
+        <div id="audio-result"></div>
     </section>
+    <script>
+        const data = [
+        { model: 'librispeech_pretrained_v3', algorithm: 'FGSM', successRate: 0, pNormDistance: 8.5593, score: 91.5914 },
+        { model: 'librispeech_pretrained_v3', algorithm: 'PGD', successRate: 80, pNormDistance: 3.1502, score: 28.5762 },
+        {model:'librispeech_pretrained_v3', algorithm: 'Genetic', successRate: 100, pNormDistance: 0.0000, score: 0.0000},
+        ];
+
+        // 创建条形图
+        const chart1 = new G2.Chart({
+        container: 'container1',
+        width: 800,
+        height: 600,
+        });
+        chart1.data(data);
+        chart1.scale({
+        successRate: { min: 0, max: 100 },
+        pNormDistance: { min: 0 },
+        });
+        chart1.interval().position('algorithm*successRate').color('model');
+        chart1.interval().position('algorithm*pNormDistance').color('model');
+        chart1.render();
+
+        // 创建雷达图
+        const chart2 = new G2.Chart({
+        container: 'container2',
+        width: 800,
+        height: 600,
+        });
+        chart2.data(data);
+        chart2.coordinate('polar');
+        chart2.line().position('model*score').color('algorithm');
+        chart2.point().position('model*score').color('algorithm');
+        chart2.render();
+    </script>
     <script>
         // 首先，获取你想要添加点击事件的按钮
         var button = document.querySelector('button[id="setting-button"]');
@@ -183,6 +193,7 @@
     <!-- <footer>
         <p>&copy; 2020 All rights reserved</p>
     </footer> -->
+  
     <script>
         document.getElementById('upload-form').addEventListener('submit', function(event) {
             event.preventDefault();
@@ -206,10 +217,29 @@
                 // 处理错误
                 console.error(error);
             });
-        
+        F
         }, false);
         </script>
 
+        <script src="{% static 'js/index.js' %}"></script>
+        <script>
+            $(document).ready(function() {
+            $('.sidebar a').on('click', function(e) {
+                e.preventDefault();
 
+                // Remove active class from all links
+                $('.sidebar a').removeClass('active');
+                // Add active class to the clicked link
+                $(this).addClass('active');
+
+                // Hide all sections
+                $('section').hide();
+                // Show the clicked section
+                var section = $(this).attr('href');
+                $(section).show();
+            });
+        });
+
+        </script>
 </html>
 

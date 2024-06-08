@@ -58,7 +58,7 @@ _DEFAULT_ROBUST_THR = 0.6
 
 from AudioConfig import config
 
-def audio_test(config):
+def audio_test(config, saved = False):
     res = {}
     config_bak = {k: v if v is not None else "Default" for k, v in config.items()}
     # get attack recipes
@@ -92,39 +92,40 @@ def audio_test(config):
             raise FileNotFoundError(f"Input directory `{str(input_dir)}` not found")
         input_is_builtin = False
 
-    output_dir = config.get("output_dir", None)
-    if output_dir is None:
-        if input_is_builtin:
-            output_dir = _DATA_DIR / f"{input_dir.stem}-AdvGen"
-        else:
-            output_dir = input_dir.parent / f"{input_dir.stem}-AdvGen"
-        if output_dir.exists():
-            tmp = [
-                item
-                for item in output_dir.parent.glob(f"{output_dir.stem}-*")
-                if re.match(f"^{output_dir.stem}\\-\\d+$", item.stem)
-            ]
-            if len(tmp) == 0:
-                num = 1
-            else:
-                num = max(int(f.stem.split("-")[-1]) for f in tmp) + 1
-            output_dir = output_dir.parent / f"{output_dir.stem}-{num}"
-    else:
-        if Path(output_dir).parent == Path("."):
+    if saved:
+        output_dir = config.get("output_dir", None)
+        if output_dir is None:
             if input_is_builtin:
-                output_dir = _DATA_DIR / output_dir
+                output_dir = _DATA_DIR / f"{input_dir.stem}-AdvGen"
             else:
-                output_dir = input_dir.parent / output_dir
+                output_dir = input_dir.parent / f"{input_dir.stem}-AdvGen"
+            if output_dir.exists():
+                tmp = [
+                    item
+                    for item in output_dir.parent.glob(f"{output_dir.stem}-*")
+                    if re.match(f"^{output_dir.stem}\\-\\d+$", item.stem)
+                ]
+                if len(tmp) == 0:
+                    num = 1
+                else:
+                    num = max(int(f.stem.split("-")[-1]) for f in tmp) + 1
+                output_dir = output_dir.parent / f"{output_dir.stem}-{num}"
         else:
-            output_dir = Path(output_dir).resolve()
-    output_dir.mkdir(parents=True, exist_ok=True)
+            if Path(output_dir).parent == Path("."):
+                if input_is_builtin:
+                    output_dir = _DATA_DIR / output_dir
+                else:
+                    output_dir = input_dir.parent / output_dir
+            else:
+                output_dir = Path(output_dir).resolve()
+        output_dir.mkdir(parents=True, exist_ok=True)
 
     device = config.get("device", None)
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
 
     early_stop = config.get("early_stop", True)
-    verbose = False
+    verbose = config.get("verbose", False)
     query_budget = config.get("query_budget", None)
 
     # load model
@@ -135,7 +136,6 @@ def audio_test(config):
     else:
         # 展示仅支持自带的模型
         model_path = config['model']
-
     model = load_model(model_path=model_path).to(device)
     decoder = load_decoder(labels=model.labels)
     audio_model = PyTorchAudioModel(model, decoder, device)
@@ -145,7 +145,6 @@ def audio_test(config):
         "success": [],
         "pDistance": [],
     }
-
     for r_cls in recipe_cls:
         with tqdm(
             input_files,
@@ -175,10 +174,10 @@ def audio_test(config):
                     testing_results["success"].append(decoded_adv == goal)
                     testing_results["pDistance"].append(torch.norm(adv - sound, p=2).item())
 
-                    output_file_path = output_dir / f"{input_file_path.stem}-{int(time.time())}.wav"
-
+                    if saved:
                     # save to output file
-                    # torchaudio.save(str(output_file_path), adv.detach().cpu(), sample_rate=sample_rate)
+                        output_file_path = output_dir / f"{input_file_path.stem}-{int(time.time())}.wav"
+                        torchaudio.save(str(output_file_path), adv.detach().cpu(), sample_rate=sample_rate)
 
                     pbar.set_postfix_str(
                         "Accumulated [Success / Total: "
@@ -220,6 +219,7 @@ def audio_test(config):
     summary_rows.append([conclusion, ""])
     log_summary_rows(summary_rows, "Testing Results")
     final_score = 100 - 1 / (0.01 * res["Average PDistance"] + 1 / 30) - 70 * res["Success Rate"]
+    print(res)
     return final_score
 
 
@@ -241,4 +241,5 @@ def log_summary_rows(rows, title, align_center=False):
 
 
 if __name__ == "__main__":
-    audio_test(config)
+    # config["verbose"] = True
+    print(audio_test(config))

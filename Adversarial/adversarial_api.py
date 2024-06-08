@@ -108,6 +108,7 @@ def test_acc(model, testloader, test_images, n_image = 448, save_test_images = F
         p_labels = []
         saved_img = []
         i = 0
+       
         for data in testloader:
             images, labels = data
             if total < n_image:

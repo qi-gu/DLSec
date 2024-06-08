@@ -38,14 +38,15 @@ def cv(request):
         'score':None
     }
     if request.method == 'POST':
+    
         # if request.POST.get('action')=='setting':
 
         status={
             'state':'运行已结束',
             'score':None
         }
-        global file_url
-        if file_url is None:
+        global cv_file_url
+        if cv_file_url is None:
             messages.error(request,"请先上传模型文件！")
             return render(request,"cv.html",status)
         print(request.POST)
@@ -63,20 +64,21 @@ def cv(request):
         evaluation_params['datapoison_method'] = poison
         evaluation_params['datapoison_reinforce_method'] = adver
 
-
+        
         model_type = (dataset+"_"+model_type).lower()
         model = torch.hub.load("chenyaofo/pytorch-cifar-models", "cifar10_resnet56", pretrained=True)
-        model.load_state_dict(torch.load('.'+file_url))
+        model.load_state_dict(torch.load('.'+cv_file_url))
         evaluation_params['model'] =model
         score=ModelEvaluation(evaluation_params)
         print(score)
+        
         # 对evaluation_params进行对于修改，一些比较基础的参数无需修改
         # Process(target=ModelEvaluation,args=[evaluation_params]).start()
         # elif request.POST.get('action')=='stop':
         #     status={
         #         'state':'运行已经结束'
         #     }
-    status['score']=json.dumps({"scores": {"ACC-0.005":{"13":1.0},"pgd-0.005":{"13":1.0},"After_Datapoison_Defense_ACC":{"13":0.4572544931},"PoisonSR":{"13":1.0},"NoisyACC-0.005":{"13":0.1038367346},"trigger":{"13":0.002},"trigger_std":{"13":0.1435275297},"backdoor_label":{"13":1.0},"nifgsm-0.005":{"13":0.6507},"trigger_size":{"13":0.6255031939},"afterPoisonACC":{"13":0.5705973741},"ACC-0.01":{"13":0.9370630631},"vnifgsm-0.005":{"13":0.5660869565},"mifgsm-0.005":{"13":0.5226956522},"BlurredACC-0.01":{"13":0.7005999999},"sinifgsm-0.005":{"13":0.7064705882},"vmifgsm-0.005":{"13":0.5660869565},"difgsm-0.005":{"13":0.5226956522},"NoisyACC-0.01":{"13":0.0732857144},"BlurredACC-0.005":{"13":0.7952820515},"CompressedACC-0.005":{"13":0.1396551725},"fgsm-0.005":{"13":1.0},"CompressedACC-0.01":{"13":0.0911071429},"tifgsm-0.005":{"13":0.2826875}}, "total_scores": {"13":0.5726686448}})
+    status['score']=json.dumps({"scores": {"ACC-0.005":{"13":1.0},"pgd-0.005":{"13":1.0},"After_Datapoison_Defense_ACC":{"13":0.4572544931},"PoisonSR":{"13":1.0},"NoisyACC-0.005":{"13":0.1038367346},"trigger":{"13":0.002},"trigger_std":{"13":0.1435275297},"backdoor_label":{"13":1.0},"nifgsm-0.005":{"13":0.6507},"trigger_size":{"13":0.6255031939},"afterPoisonACC":{"13":0.5705973741},"ACC-0.01":{"13":0.9370630631},"vnifgsm-0.005":{"13":0.5660869565},"mifgsm-0.005":{"13":0.5226956522},"BlurredACC-0.01":{"13":0.7005999999},"sinifgsm-0.005":{"13":0.7064705882},"vmifgsm-0.005":{"13":0.5660869565},"difgsm-0.005":{"13":0.5226956522},"NoisyACC-0.01":{"13":0.0732857144},"BlurredACC-0.005":{"13":0.7952820515},"CompressedACC-0.005":{"13":0.1396551725},"fgsm-0.005":{"13":1.0},"CompressedACC-0.01":{"13":0.0911071429},"tifgsm-0.005":{"13":0.2826875}}, "total_scores": {"13":0.5726686448}}) 
     print(status['score'])
     return render(request, "cv.html",status)
 
@@ -86,13 +88,13 @@ def get_test_result(request):
 
 def upload(request):
     if request.method == 'POST':
-        global file_url
+        global cv_file_url
         uploaded_file = request.FILES['model']
         evaluation_params['model'] = uploaded_file
         print("change model")
         fs = FileSystemStorage()
         name=fs.save(uploaded_file.name, uploaded_file)                             
-        file_url=fs.url(name)
+        cv_file_url=fs.url(name)
         return JsonResponse({'result':"successfully upload the model"})
 
 

@@ -26,8 +26,7 @@
                 <a href="/cv" class="active">图像模型</a></li>
                 <a href="/nlp">语言模型</a></li>
                 <a href="/audio">语音模型</a></li>
-                <a href="/contact">联系我们</a></li>
-                <a href="https://github.com/qi-gu/DLSec">项目地址</a></li>
+
         </nav>
 
     </header>
@@ -86,9 +85,7 @@
                                 <label for="model">模型结构</label>
                                 <select id="model" name="model">
                                     <option value="bert">bert</option>
-
                                 </select>
-
                             <li>
                                 <label for="back">后门攻防鲁棒性测试方法</label>
                                 <select id="back" name="back">
@@ -98,41 +95,39 @@
                             </li>
                             
                             <li>
-                                
                                 <button type="button" id="setting-button">高级设置</button>
                                 <button type="submit">确认参数</button>
                             </li>
                         </ul>
-                    
                     </div>
               
             
                     <div class="setting-box-2 hidden">
-                    <ul>
-                     
-                            <p>evaluation_params</p>
-                            <li>
-                                <label>optimizer</label><input type="text" name="optimizer" value="adam">
-                            </li>
-                            <li>
-                                <label>target_label</label><input type="text" name="target_label" value="1"></input>
-                            </li>
-                            <li>
-                                <label>poison_rate</label><input type="text" name="poison_rate" value="10"></input>
-                            </li>
-                            <li>
-                                <label>batch_size</label><input type="text" name="batch_size" value="64"></input>
-                            </li>
-                            <li>
-                                <label>device</label><input type="text" name="device" value="cuda"></input>
-                            </li>
-                            
+                        <ul>
+                        
+                                <p>evaluation_params</p>
+                                <li>
+                                    <label>optimizer</label><input type="text" name="optimizer" value="adam">
+                                </li>
+                                <li>
+                                    <label>target_label</label><input type="text" name="target_label" value="1"></input>
+                                </li>
+                                <li>
+                                    <label>poison_rate</label><input type="text" name="poison_rate" value="10"></input>
+                                </li>
+                                <li>
+                                    <label>batch_size</label><input type="text" name="batch_size" value="64"></input>
+                                </li>
+                                <li>
+                                    <label>device</label><input type="text" name="device" value="cuda"></input>
+                                </li>
+                                
 
-                    </ul>
-                </div>
-                <div class="setting-box-2 hidden">
-                    <ul>
-                       
+                        </ul>
+                    </div>
+                    <div class="setting-box-2 hidden">
+                        <ul>
+                        
                             <li>
                                 <label>epoch</label><input type="text" name="epoch" value="10"></input>
                             </li>
@@ -145,9 +140,9 @@
                             <li>
                                 <label>weight_decay</label><input type="text" name="weight_decay" value="0"></input>
                             </li>
-                            
-                    </ul>
-                </div>
+                                
+                        </ul>
+                    </div>
             </form>  
         </div>
         
