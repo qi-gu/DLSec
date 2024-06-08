@@ -123,11 +123,9 @@ def nlp_setting(request):
         'dataset':dataset,
         'back':back,
     }
-    # evaluation_params['model'] =model
-    # 对evaluation_params进行对于修改，一些比较基础的参数无需修改
-    # Process(target=run,args=[params]).start()
-    # status["score"] = json.dumps(run(params=params))
-    status["score"] = json.dumps({"scores":{"acc":0.5,"asr":0.5,"robust":0.5},"total_scores":0.5})
+    
+    status["score"] = json.dumps(run(params=params))#实际运行函数
+    # status["score"] = json.dumps({"scores":{"acc":0.9,"asr":0.7,"robust":0.85},"total_scores":0.8*100})#调试使用例子
     return render(request,"nlp.html",status)
 
 def nlp_upload(request):
