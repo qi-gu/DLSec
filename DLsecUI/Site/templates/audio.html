@@ -108,43 +108,48 @@
     </section>
 
     <section class="report" id="report">
+        
         <h1 class="section-title">结果总览</h1>
-        <div id="audio-result"></div>
+        <p> 当前状态：运行已结束</p>
+
+        <div id="result"></div> 
+    
+         
+        <!-- <div class="report-boxes">
+            <div class="report-box">
+
+                <div id="FGSM"></div>
+            </div>
+            <div class="report-box">
+              
+                <div id="PGD"></div>
+            </div>
+            <div class="report-box">
+                <div id="Genetic"></div>
+            </div>
+            <div class="report-box">
+                <div id="CW"></div>
+            </div>
+            <div class="report-box">
+                <div id="ICW"></div>
+            </div>   
+        </div> -->
+        <div class="report-boxes">
+            <div class="report-box">
+                <h3>各方法下攻击成功率直方图</h3>
+                <div id="container1"></div>
+            </div>
+            <div class="report-box">
+                <h3>各方法下平均P范数距离直方图</h3>
+                <div id="container2"></div>
+            </div>  
+      
+           
+        </div>
+        <div id="final-score" style="display: flex; justify-content: center; text-align: center; font-size: 2.3rem; color:var(--blue)"></div>
+      
     </section>
-    <script>
-        const data = [
-        { model: 'librispeech_pretrained_v3', algorithm: 'FGSM', successRate: 0, pNormDistance: 8.5593, score: 91.5914 },
-        { model: 'librispeech_pretrained_v3', algorithm: 'PGD', successRate: 80, pNormDistance: 3.1502, score: 28.5762 },
-        {model:'librispeech_pretrained_v3', algorithm: 'Genetic', successRate: 100, pNormDistance: 0.0000, score: 0.0000},
-        ];
-
-        // 创建条形图
-        const chart1 = new G2.Chart({
-        container: 'container1',
-        width: 800,
-        height: 600,
-        });
-        chart1.data(data);
-        chart1.scale({
-        successRate: { min: 0, max: 100 },
-        pNormDistance: { min: 0 },
-        });
-        chart1.interval().position('algorithm*successRate').color('model');
-        chart1.interval().position('algorithm*pNormDistance').color('model');
-        chart1.render();
-
-        // 创建雷达图
-        const chart2 = new G2.Chart({
-        container: 'container2',
-        width: 800,
-        height: 600,
-        });
-        chart2.data(data);
-        chart2.coordinate('polar');
-        chart2.line().position('model*score').color('algorithm');
-        chart2.point().position('model*score').color('algorithm');
-        chart2.render();
-    </script>
+   
     <script>
         // 首先，获取你想要添加点击事件的按钮
         var button = document.querySelector('button[id="setting-button"]');
@@ -241,5 +246,6 @@
         });
 
         </script>
+        <script src="{% static 'js/report_audio.js' %}"></script>
 </html>
 
