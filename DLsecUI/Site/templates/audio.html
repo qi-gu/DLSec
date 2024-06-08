@@ -19,7 +19,7 @@
 
 <body> 
     <header>
-        <a href="#" class="logo"><i class="fas-fa-untensiles"></i>深度学习模型安全评估平台</a>
+        <a href="#" class="logo"><i class="fas-fa-untensiles"></i>ModelOasis</a>
         
         <nav class="navbar">
                 <a href="/index">首页</a></li>
@@ -114,26 +114,7 @@
 
         <div id="result"></div> 
     
-         
-        <!-- <div class="report-boxes">
-            <div class="report-box">
-
-                <div id="FGSM"></div>
-            </div>
-            <div class="report-box">
-              
-                <div id="PGD"></div>
-            </div>
-            <div class="report-box">
-                <div id="Genetic"></div>
-            </div>
-            <div class="report-box">
-                <div id="CW"></div>
-            </div>
-            <div class="report-box">
-                <div id="ICW"></div>
-            </div>   
-        </div> -->
+      
         <div class="report-boxes">
             <div class="report-box">
                 <h3>各方法下攻击成功率直方图</h3>
@@ -245,6 +226,10 @@
             });
         });
 
+        </script>
+        <script>
+            let result_json='{{ score | safe }}';
+            data=JSON.parse(result_json);
         </script>
         <script src="{% static 'js/report_audio.js' %}"></script>
 </html>
