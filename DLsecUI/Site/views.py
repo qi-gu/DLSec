@@ -62,7 +62,7 @@ def cv(request):
         evaluation_params['use_dataset'] = dataset
         evaluation_params['backdoor_method'] = backdoor_method
         evaluation_params['datapoison_method'] = poison
-        evaluation_params['datapoison_reinforce_method'] = adver
+        # evaluation_params['datapoison_reinforce_method'] = adver
 
         
         model_type = (dataset+"_"+model_type).lower()
@@ -78,7 +78,8 @@ def cv(request):
         #     status={
         #         'state':'运行已经结束'
         #     }
-    status['score']=json.dumps({"scores": {"ACC-0.005":{"13":1.0},"pgd-0.005":{"13":1.0},"After_Datapoison_Defense_ACC":{"13":0.4572544931},"PoisonSR":{"13":1.0},"NoisyACC-0.005":{"13":0.1038367346},"trigger":{"13":0.002},"trigger_std":{"13":0.1435275297},"backdoor_label":{"13":1.0},"nifgsm-0.005":{"13":0.6507},"trigger_size":{"13":0.6255031939},"afterPoisonACC":{"13":0.5705973741},"ACC-0.01":{"13":0.9370630631},"vnifgsm-0.005":{"13":0.5660869565},"mifgsm-0.005":{"13":0.5226956522},"BlurredACC-0.01":{"13":0.7005999999},"sinifgsm-0.005":{"13":0.7064705882},"vmifgsm-0.005":{"13":0.5660869565},"difgsm-0.005":{"13":0.5226956522},"NoisyACC-0.01":{"13":0.0732857144},"BlurredACC-0.005":{"13":0.7952820515},"CompressedACC-0.005":{"13":0.1396551725},"fgsm-0.005":{"13":1.0},"CompressedACC-0.01":{"13":0.0911071429},"tifgsm-0.005":{"13":0.2826875}}, "total_scores": {"13":0.5726686448}}) 
+    score ={"Model": "ResNet56", "CACC": "99.94", "ASR": "81.75", "NTE": "85.73", "ALDp": "74.67", "RGB": "75.09", "RIC": "66.57", "Tstd": "64.76", "Tsize": "79.92", "Score": "79.46"};
+    status['score'] = json.dumps(score)
     print(status['score'])
     return render(request, "cv.html",status)
 

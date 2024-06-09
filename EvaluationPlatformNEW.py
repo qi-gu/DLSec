@@ -30,7 +30,7 @@ def ModelEvaluation(evaluation_params=None):
     train_dataloader, test_dataloader = dataset_preprocess(name=evaluation_params['use_dataset'], batch_size=evaluation_params['batch_size'])
     train_dataloader=ac_test(train_dataloader.dataset,evaluation_params['model'])
     test_dataloader=ac_test(test_dataloader.dataset,evaluation_params['model'])
-    ReinforcedModel_dict_path = run_test_on_model(evaluation_params['model'], evaluation_params['allow_backdoor_defense'], evaluation_params['backdoor_method'], evaluation_params['datapoison_method'], evaluation_params['run_datapoison_reinforcement'],
+    return run_test_on_model(evaluation_params['model'], evaluation_params['allow_backdoor_defense'], evaluation_params['backdoor_method'], evaluation_params['datapoison_method'], evaluation_params['run_datapoison_reinforcement'],
                                                   evaluation_params['datapoison_reinforce_method'], train_dataloader, test_dataloader, evaluation_params)
     # score=test_score()
     # return score
@@ -100,7 +100,7 @@ def run_test_on_model(Model2BeEvaluated, allow_backdoor_defense, backdoor_method
     else:
         datapoison_defense_rst = None
 
-    process_result(params['tag'], adversarial_rst, backdoor_rst, datapoison_test_rst, datapoison_defense_rst)
+    return process_result(params['tag'], adversarial_rst, backdoor_rst, datapoison_test_rst, datapoison_defense_rst)
     return ReinforcedModel_dict_path
 
 
@@ -222,7 +222,7 @@ def process_result(tag="DefaultTag", adversarial_rst=None, backdoor_rst=None, da
         writer.writeheader()
         for row in data:
             writer.writerow(row)
-    return
+    return final_rst
 
 def test_score():
     df=pd.read_csv('./ModelResults.csv')
