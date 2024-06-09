@@ -156,8 +156,14 @@ def audio_setting(request):
         }'''
         model = request.POST.get('model')
         goal = request.POST.get('goal')
-        recipes = request.POST.getlist('recipes')
-
+        recipes = request.POST.get('recipes')
+  
+        fgsm = 'fgsm' in request.POST.getlist('back')
+        pgd = 'pgd' in request.POST.getlist('back')
+        genetic = 'genetic' in request.POST.getlist('back')
+        cw = 'cw' in request.POST.getlist('back')
+        icw = 'icw' in request.POST.getlist('back')
+        print(fgsm, pgd, genetic, cw, icw)
         params = {}
         # 如果model是内置的，就直接传字符串；如果是上传的，就传文件路径（但现在不支持，价格判断）
         if model in _BUILTIN_MODELS:
