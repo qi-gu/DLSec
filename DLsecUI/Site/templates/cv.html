@@ -15,9 +15,22 @@
     <!-- <script src="https://unpkg.com/papaparse@5/dist/papaparse.min.js"></script> -->
     <script src="https://d3js.org/d3-dsv.v1.min.js"></script>
 </head>
+<script>
+  
+    const markdownUrl = "{% static 'md/cv.md' %}";
 
+    function loadMarkdownFile() {
+        fetch(markdownUrl)
+            .then(response => response.text())
+            .then(markdown => {
+                const html = marked(markdown);
+                document.getElementById('markdown-content').innerHTML = html;
+            });
+    }
+   
+</script>
 
-<body> 
+<body onload="loadMarkdownFile()"> 
     <header>
         <a href="#" class="logo"><i class="fas-fa-untensiles"></i>
             <img src="{% static 'image/logo3.png' %}" alt="ModelOasis Logo">
@@ -103,8 +116,6 @@
                                 <label for="adver">对抗样本鲁棒性测试方法</label> 
                                 <select id="adver" name="adver">
                                     <option value="Noise">all</option>
-                                    <option value="Blurred"></option>
-                                    <option value="Compressed">Data Injection</option>
                                 </select>
                             </li>
                             <li>
@@ -305,12 +316,12 @@
         }, false);
         </script>
 
-    <!-- <script>
+    <script>
         let result_json='{{ score | safe }}';
         result=JSON.parse(result_json);
         
         
-    </script> -->
+    </script>
     <script>
         var result_file="{% static 'files/data.csv' %}"
     </script>

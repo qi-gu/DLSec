@@ -70,6 +70,7 @@ def cv(request):
         model.load_state_dict(torch.load('.'+cv_file_url))
         evaluation_params['model'] =model
         score=ModelEvaluation(evaluation_params)
+        status['score'] = json.dumps(score)
         print(score)
         
         # 对evaluation_params进行对于修改，一些比较基础的参数无需修改
@@ -78,8 +79,8 @@ def cv(request):
         #     status={
         #         'state':'运行已经结束'
         #     }
-    score ={"Model": "ResNet56", "CACC": "99.94", "ASR": "81.75", "NTE": "85.73", "ALDp": "74.67", "RGB": "75.09", "RIC": "66.57", "Tstd": "64.76", "Tsize": "79.92", "Score": "79.46"};
-    status['score'] = json.dumps(score)
+   
+    
     print(status['score'])
     return render(request, "cv.html",status)
 
@@ -127,8 +128,8 @@ def nlp_setting(request):
         'back':back,
     }
     
-    status["score"] = json.dumps(run(params=params))#实际运行函数
-    # status["score"] = json.dumps({"scores":{"acc":0.9,"asr":0.7,"robust":0.85},"total_scores":0.8*100})#调试使用例子
+    # status["score"] = json.dumps(run(params=params))#实际运行函数
+    status["score"] = json.dumps({"scores":{"acc":0.9,"asr":0.7,"robust":0.85},"total_scores":0.8*100})#调试使用例子
     return render(request,"nlp.html",status)
 
 def nlp_upload(request):
@@ -155,8 +156,14 @@ def audio_setting(request):
         }'''
         model = request.POST.get('model')
         goal = request.POST.get('goal')
-        recipes = request.POST.getlist('recipes')
-
+        recipes = request.POST.get('recipes')
+  
+        fgsm = 'fgsm' in request.POST.getlist('back')
+        pgd = 'pgd' in request.POST.getlist('back')
+        genetic = 'genetic' in request.POST.getlist('back')
+        cw = 'cw' in request.POST.getlist('back')
+        icw = 'icw' in request.POST.getlist('back')
+        print(fgsm, pgd, genetic, cw, icw)
         params = {}
         # 如果model是内置的，就直接传字符串；如果是上传的，就传文件路径（但现在不支持，价格判断）
         if model in _BUILTIN_MODELS:
