@@ -15,9 +15,23 @@
 
 
 </head>
+<script>
+  
+    const markdownUrl = "{% static 'md/audio.md' %}";
 
+    function loadMarkdownFile() {
+        fetch(markdownUrl)
+            .then(response => response.text())
+            .then(markdown => {
+                const html = marked(markdown);
+                document.getElementById('markdown-content').innerHTML = html;
+            });
+    }
+   
+</script>
 
-<body> 
+<body onload="loadMarkdownFile()"> 
+ 
     <header>
         <a href="#" class="logo">
             <img src="{% static 'image/logo3.png' %}" alt="ModelOasis Logo">
