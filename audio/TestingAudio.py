@@ -193,7 +193,7 @@ def audio_test(config, saved = False):
 
     res = []
     for i, val in testing_results.items():
-        res.append({'algorithm': i, 'success_rate': np.mean(val["success"]).item(), 'averageP': np.mean(val["pDistance"]).item(),
+        res.append({'algorithm': i, 'successRate': np.mean(val["success"]).item(), 'averageP': np.mean(val["pDistance"]).item(),
                     'totalScore': 100 - 1 / (0.01 * np.mean(val["pDistance"]).item() + 1 / 30) - 70 * np.mean(val["success"]).item()})
     ''' 
     for i in range(len(summary_rows)):

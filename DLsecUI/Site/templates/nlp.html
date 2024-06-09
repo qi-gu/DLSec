@@ -12,12 +12,25 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@3.0.7/marked.min.js"></script>
  
     <script src="https://cdn.jsdelivr.net/npm/@antv/g2@4.1.10/dist/g2.min.js"></script>
-
+    <script src="https://d3js.org/d3-dsv.v1.min.js"></script>
 
 </head>
+<script>
+  
+    const markdownUrl = "{% static 'md/nlp.md' %}";
 
+    function loadMarkdownFile() {
+        fetch(markdownUrl)
+            .then(response => response.text())
+            .then(markdown => {
+                const html = marked(markdown);
+                document.getElementById('markdown-content').innerHTML = html;
+            });
+    }
+   
+</script>
 
-<body> 
+<body onload="loadMarkdownFile()"> 
     <header>
         <a href="#" class="logo">
             <img src="{% static 'image/logo3.png' %}" alt="ModelOasis Logo">
