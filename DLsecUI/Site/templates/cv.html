@@ -209,7 +209,7 @@
         
         <h1 class="section-title">结果总览</h1>
         <p> 当前状态：运行已结束</p>
-        
+        <div id="model-info"></div>
         <div class="report-boxes">
             <div class="report-box">
                 <h3 style="font-size: 1.5rem; font-weight:bold; color: var(--blue);">对抗样本鲁棒性测试</h3>
@@ -317,8 +317,8 @@
         </script>
 
     <script>
-        let result_json='{{ score | safe }}';
-        result=JSON.parse(result_json);
+        // let result_json='{{ score | safe }}';
+        // result=JSON.parse(result_json);
         
         
     </script>

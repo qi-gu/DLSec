@@ -1,4 +1,18 @@
-
+// result=  {
+//     "Model": "ResNet56",
+//     "CACC": 99.94,
+//     "ASR": 81.75,
+//     "NTE": 85.73,
+//     "ALDp": 74.67,
+//     "RGB": 75.09,
+//     "RIC": 66.57,
+//     "Tstd": 64.76,
+//     "Tsize": 79.92,
+//     "Score": 79.46
+// }
+result = JSON.parse(JSON.stringify(result));
+element_model=document.getElementById("model-info");
+element_model.innerHTML=`<p><strong>模型名称:</strong> ${result["Model"]}</p>`;
 
 // 创建雷达图
 const chart_backdoor = new G2.Chart({

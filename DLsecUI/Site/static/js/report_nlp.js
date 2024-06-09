@@ -1,5 +1,4 @@
 
-
         
     var scores = result.scores;
     var total_scores = result.total_scores;
