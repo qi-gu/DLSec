@@ -1,4 +1,8 @@
-
+// var data = [
+//     { algorithm: 'FGSM', successRate: 0, averageP: 8.5593, totalScore: 91.5914 },
+//     { algorithm: 'PGD', successRate: 0.8, averageP: 3.1502, totalScore: 28.5762 },
+//     { algorithm: 'CW', successRate: 0.8, averageP: 2.4076, totalScore: 26.5813 }
+// ];
 
 // 创建第一个图表
 const chart1 = new G2.Chart({
