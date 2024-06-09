@@ -1,5 +1,5 @@
 
-result={"Model": "ResNet56(Backdoored)", "CACC": "99.97", "ASR": "73.9", "NTE": "86.17", "ALDp": "82.92", "RGB": "75.09", "RIC": "67.08", "Tstd": "54.2", "Tsize": "49.2", "Score": "73.79"};
+// result={"Model": "ResNet56", "CACC": "99.94", "ASR": "81.75", "NTE": "85.73", "ALDp": "74.67", "RGB": "75.09", "RIC": "66.57", "Tstd": "64.76", "Tsize": "79.92", "Score": "79.46"};
 var result = JSON.parse(JSON.stringify(result));
 
 
