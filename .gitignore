@@ -5,6 +5,5 @@ audio/data/
 __pycache__
 *.pyc
 *.rdb
-audio/Datasets/
 nlp_bert/models/
 data/
